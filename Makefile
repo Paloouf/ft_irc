@@ -1,7 +1,7 @@
-INC=
-
 NAME = ft_irc
-SRC = main.cpp
+SRC = src/main.cpp \
+	src/Server.cpp \
+	src/Client.cpp
 	
 	
 OBJ = $(SRC:.cpp=.o)
@@ -24,7 +24,7 @@ NO_COLOR        =       \033[0m
 
 HEADER_NAME		=		$(HEADER_TOP) $(HEADER_TOP_MID) $(HEADER_MID)$(HEADER_BOT)
 
-HEADER_COMP     =       echo "\n🌐 $(BOLD_YELLOW)$(NAME) $(NO_COLOR)by ltressen\n\n"
+HEADER_COMP     =       echo "\n🌐 $(BOLD_YELLOW)$(NAME) $(NO_COLOR)by jcasades, alsaez & ltressen\n\n"
 
 COMP_START      =       printf "\n🚧 $(BOLD_YELLOW)Make: $(NO_COLOR)Debut de compilation...\r"
 
@@ -62,6 +62,6 @@ fclean:
 
 re: clean all
 
-%.o: %.cpp
-	@printf "🚧 $(BOLD_YELLOW)Make: $(NO_COLOR)Compilation des fichiers : %-33.33s\r$(NO_COLOR)" $@
+%.o: $(SRCDIR)/%.cpp
+	@printf "🚧 $(BOLD_YELLOW)Make: $(NO_COLOR)Compilation des fichiers : %-33.33s\r$(NO_COLOR)" $@ $?
 	@${CC} ${FLAGS} -c $< -o $@

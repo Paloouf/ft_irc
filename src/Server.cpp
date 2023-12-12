@@ -1,18 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ltressen <ltressen@student.42perpignan.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/12/12 10:29:08 by ltressen          #+#    #+#             */
-/*   Updated: 2023/12/12 10:29:41 by ltressen         ###   ########.fr       */
+/*   Created: 2023/12/12 10:56:20 by ltressen          #+#    #+#             */
+/*   Updated: 2023/12/12 11:00:01 by ltressen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
+#include "../include/Server.hpp"
 
-int main(){
-	std::cout << "First" << std::endl;
-	return 0;
+Server::Server(){
+	std::cout << "Test Server\n";
+}
+Server::~Server(){
+	std::cout << "Server dead\n";
 }
