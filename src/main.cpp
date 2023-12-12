@@ -6,7 +6,7 @@
 /*   By: ltressen <ltressen@student.42perpignan.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/12 10:29:08 by ltressen          #+#    #+#             */
-/*   Updated: 2023/12/12 10:59:13 by ltressen         ###   ########.fr       */
+/*   Updated: 2023/12/12 12:08:32 by ltressen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,6 @@
 int main(){
 	Client cl;
 	Server srv;
-	std::cout << "First" << std::endl;
+	std::cout << "Firstl" << std::endl;
 	return 0;
 }
