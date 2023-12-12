@@ -1,7 +1,5 @@
-NAME = ft_irc
-SRC = src/main.cpp \
-	src/Server.cpp \
-	src/Client.cpp
+NAME = ircserv
+SRC = ${wildcard src/*.cpp}
 	
 	
 OBJ = $(SRC:.cpp=.o)
