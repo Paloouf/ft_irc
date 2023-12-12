@@ -1,6 +1,6 @@
 # ft_irc
 
-## in collaboration with @jcasades & @SAEZITO
+In collaboration with [@jordancasadessus](https://github.com/jordancasadessus) & [@SAEZITO](https://github.com/SAEZITO)
 
 Working on the ft_irc project from 42
 
