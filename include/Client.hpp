@@ -7,6 +7,7 @@ class Client{
 	public:
 		Client(Server* server, int fd, std::string hostname, int port);
 		~Client();
+		Client&	operator=(const Client& ref);
 
 		//GETTERS
 		int	getFd() const{return _fd;}

@@ -8,3 +8,10 @@ Client::Client(Server *server, int fd, std::string hostname, int port) :_server(
 Client::~Client(){
 	std::cout << "Client dead\n";
 }
+
+Client& Client::operator=(const Client& ref){
+	_fd = ref.getFd();
+	_hostname = ref.getHostname();
+	_port = ref.getPort();
+	return *this;
+}

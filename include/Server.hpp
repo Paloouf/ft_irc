@@ -1,13 +1,15 @@
 #pragma once
 
 #include "main.hpp"
+class Client;
 
 class Server{
 	private:
 		Server(){};
 		std::string _port;
 		std::string _password;
-		//std::vector<Client*> _clients;
+		std::vector<Client*> _clients;
+		struct pollfd	*_clientsFd;
 		int	_sockfd;
 	public:
 		~Server();
@@ -16,6 +18,7 @@ class Server{
 		std::string getPassword();
 		std::string getPort();
 		void	listening();
+		void	createFd();
 		void	waitInput();
 		class	portNonDigit : public std::exception
 		{

@@ -9,4 +9,5 @@
 #include <arpa/inet.h>
 #include "Client.hpp"
 #include "Server.hpp"
+#include <poll.h>
 #include <cstdlib>

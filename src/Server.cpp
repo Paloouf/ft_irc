@@ -42,12 +42,39 @@ void	Server::listening(){
 	bind(_sockfd, (struct sockaddr*)&address, sizeof(address));
 	listen(_sockfd, 8);
 	std::cout << "Waiting for connection...\n";
+	createFd();
 	while (1)
 		waitInput();
 }
 
+void	Server::createFd(){
+	this->_clientsFd = new struct pollfd[9];
+
+	this->_clientsFd[0].fd = this->_sockfd;
+	this->_clientsFd[0].events = POLLIN;
+
+	for (unsigned long i = 0; i < this->_clients.size(); i++)
+	{
+		this->_clientsFd[i + 1].fd = 0;
+		this->_clientsFd[i + 1].events = POLLIN;
+	}
+}
+
 void	Server::waitInput(){
-	
+	int val = poll(_clientsFd, _clients.size() + 1, -1);
+	std::cout << _clients.size() << std::endl;
+	if (val < 0)
+		std::cout << "error\n";
+	for (int i = 0; _clientsFd[i].fd != 0; i++){
+		if (_clientsFd[i].revents != 0){
+			if (_clientsFd[i].fd == _sockfd)
+			{
+				std::cout << "add client\n";
+				while(1){}
+			}
+		}
+		
+	}
 }
 
 
