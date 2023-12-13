@@ -1,20 +1,44 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ltressen <ltressen@student.42perpignan.    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/12/12 10:56:20 by ltressen          #+#    #+#             */
-/*   Updated: 2023/12/12 11:00:01 by ltressen         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/Server.hpp"
 
-Server::Server(){
-	std::cout << "Test Server\n";
+void		Server::checkInput()
+{
+	for (int i = 0; _port[i] != 0; i++)
+		if (!std::isdigit(_port[i]))
+			throw Server::portNonDigit();
+	if (std::atol(_port.c_str()) > 64738 || _port.size() > 5)
+		throw Server::portTooHigh();
 }
+
 Server::~Server(){
-	std::cout << "Server dead\n";
+	std::cout << "Server dead\n";}
+
+Server::Server(std::string port, std::string password): _port(port), _password(password)
+{
+	std::cout << "Server active" << std::endl;
+	try {checkInput();}
+	catch (Server::portNonDigit& error)
+		{std::cerr << error.what() << std::endl;}
+	catch (Server::portTooHigh& error)
+		{std::cerr << error.what() << std::endl;}
+	listening();
+}
+
+std::string	Server::getPassword(){
+	return (_password);}
+
+std::string Server::getPort(){
+	return (_port);}
+
+void	Server::listening(){
+	struct sockaddr_in address;
+	in_addr_t addr = inet_addr("127.0.0.1");
+
+	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	address.sin_family = AF_INET;
+	address.sin_addr = addr;
+	address.sin_port = htons(_port);
+
+	bind(_sockfd, (struct sockaddr*)&address, sizeof(address));
+	listen(_sockfd, 8);
+	
 }
