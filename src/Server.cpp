@@ -31,14 +31,23 @@ std::string Server::getPort(){
 
 void	Server::listening(){
 	struct sockaddr_in address;
-	in_addr_t addr = inet_addr("127.0.0.1");
+	struct in_addr addr;
+	addr.s_addr = INADDR_ANY;
 
 	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	address.sin_family = AF_INET;
 	address.sin_addr = addr;
-	address.sin_port = htons(_port);
+	address.sin_port = htons(std::atoi(_port.c_str()));
 
 	bind(_sockfd, (struct sockaddr*)&address, sizeof(address));
 	listen(_sockfd, 8);
+	std::cout << "Waiting for connection...\n";
+	while (1)
+		waitInput();
+}
+
+void	Server::waitInput(){
 	
 }
+
+

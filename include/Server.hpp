@@ -7,7 +7,7 @@ class Server{
 		Server(){};
 		std::string _port;
 		std::string _password;
-		std::vector<Client*> _clients;
+		//std::vector<Client*> _clients;
 		int	_sockfd;
 	public:
 		~Server();
@@ -16,6 +16,7 @@ class Server{
 		std::string getPassword();
 		std::string getPort();
 		void	listening();
+		void	waitInput();
 		class	portNonDigit : public std::exception
 		{
 			public:
