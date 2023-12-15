@@ -11,15 +11,21 @@ class Server{
 		std::vector<Client*> _clients;
 		struct pollfd	*_clientsFd;
 		int	_sockfd;
+		void	listening();
+		void	createFd();
+		void	waitInput();
+		void	addClient();
+		void	receiveData(Client *client);
+		std::string	convertIP(const void *address);
+
+		//void	createClient();
 	public:
 		~Server();
 		Server(std::string port, std::string password);
 		void		checkInput();
 		std::string getPassword();
 		std::string getPort();
-		void	listening();
-		void	createFd();
-		void	waitInput();
+
 		class	portNonDigit : public std::exception
 		{
 			public:
