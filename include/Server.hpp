@@ -15,7 +15,9 @@ class Server{
 		void	createFd();
 		void	waitInput();
 		void	addClient();
+		void	receiveData(Client *client);
 		std::string	convertIP(const void *address);
+
 		//void	createClient();
 	public:
 		~Server();
