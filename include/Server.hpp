@@ -2,6 +2,7 @@
 
 #include "main.hpp"
 class Client;
+class Channel;
 
 class Server{
 	private:
@@ -9,6 +10,7 @@ class Server{
 		std::string _port;
 		std::string _password;
 		std::vector<Client*> _clients;
+		std::vector<Channel*>	_chan;
 		struct pollfd	*_clientsFd;
 		int	_sockfd;
 		void	listening();
@@ -25,6 +27,7 @@ class Server{
 		void		checkInput();
 		std::string getPassword();
 		std::string getPort();
+		
 
 		class	portNonDigit : public std::exception
 		{

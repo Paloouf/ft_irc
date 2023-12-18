@@ -39,11 +39,15 @@ std::string Server::getPort(){
 	return (_port);}
 
 void	Server::listening(){
+	_chan.push_back(new Channel(this, "&General"));
 	struct sockaddr_in address;
 	struct in_addr addr;
 	addr.s_addr = INADDR_ANY;
 
 	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	int opt = 1;
+	setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
+	fcntl(_sockfd, F_SETFL, O_NONBLOCK);
 	address.sin_family = AF_INET;
 	address.sin_addr = addr;
 	address.sin_port = htons(std::atoi(_port.c_str()));
@@ -112,6 +116,9 @@ void	Server::receiveData(Client *client){
 		buffer[err] = '\0';
 		std::string buff = buffer;
 		std::cout << buff << std::endl;
+		
+		// if (buff.substr(0, 6) == "/nick ")
+		// 	std::cout << "lol\n";
 	}
 }
 
@@ -129,11 +136,13 @@ void	Server::addClient()
 		int	port = ntohs(address.sin_port);
 		std::cout << "SOCKET:" << socket << std::endl;
 		if (socket > 0){
-			_clients.push_back(new Client(this, socket, _ipClient, port));
 			createFd();
+			Client* client = new Client(this, socket, _ipClient, port);
+			_clients.push_back(client);
+			std::string welcome = "001 ltressen :Welcome to the Internet Relay Network, wahoo\n";
+			send(client->getFd(), welcome.c_str(), welcome.size(), 0);
 			break;
 		}
 	}
-	
 }
 
