@@ -39,11 +39,15 @@ std::string Server::getPort(){
 	return (_port);}
 
 void	Server::listening(){
+	_chan.push_back(new Channel(this, "&General"));
 	struct sockaddr_in address;
 	struct in_addr addr;
 	addr.s_addr = INADDR_ANY;
 
 	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	int opt = 1;
+	setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
+	fcntl(_sockfd, F_SETFL, O_NONBLOCK);
 	address.sin_family = AF_INET;
 	address.sin_addr = addr;
 	address.sin_port = htons(std::atoi(_port.c_str()));
@@ -68,7 +72,7 @@ void	Server::createFd(){
 	{
 		this->_clientsFd[i + 1].fd = this->_clients[i]->getFd();
 		this->_clientsFd[i + 1].events = POLLIN;
-		std::cout << "clientFd\n";
+		std::cout << "clientFd finito\n";
 	}
 }
 
@@ -77,21 +81,22 @@ void	Server::waitInput(){
 	//std::cout << _clients.size() << std::endl;
 	if (val < 0)
 		std::cout << "error poll\n";
-	for (unsigned long i = 0; i < _clients.size() + 1; i++){
+	for (unsigned long i = 0; i < _clients.size() + 1; i++)
+	{
 		std::cout << "i dans le for: " << i << std::endl;
-		if (_clientsFd[i].revents != 0){
-
-			if (_clientsFd[i].fd == _sockfd){
-				addClient();
-				std::cout << "bomboclat\n";}
-			//std::cout << i << " ici\n";
-		
-		else if(i > 0)
+		if (_clientsFd[i].revents != 0)
 		{
-			std::cout << "c'est le else if\n";
-			Client *client = this->_clients[i - 1];
-			receiveData(client);
-		}
+			if (_clientsFd[i].fd == _sockfd)
+			{
+				addClient();
+				std::cout << "bomboclat\n";
+			}
+			else
+			{
+				std::cout << "c'est le else if\n";
+				Client *client = this->_clients[i - 1];
+				receiveData(client);
+			}
 		}
 	}
 	//std::cout << "fin Input\n";
@@ -100,8 +105,10 @@ void	Server::waitInput(){
 void	Server::receiveData(Client *client){
 	char	buffer[8192];
 	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
-	if (err == 0){
-		for(unsigned long i = 0; i < _clients.size(); i++){
+	if (err == 0)
+	{
+		for(unsigned long i = 0; i < _clients.size(); i++)
+		{
 			if (_clients[i]->getFd() == client->getFd())
 				_clients.erase(_clients.begin() + i);
 		}
@@ -112,15 +119,19 @@ void	Server::receiveData(Client *client){
 		buffer[err] = '\0';
 		std::string buff = buffer;
 		std::cout << buff << std::endl;
-		if (buff.substr(0, 6) == "/nick ")
-			std::cout << "lol\n";
 	}
+}
+
+void	Server::parseBuffer(char* buffer, Client* client)
+{
+	std::string line = buffer;
+	line.find()
 }
 
 void	Server::addClient()
 {
+	char	buffer[8192];
 	int	socket = 0;
-
 	std::cout << "COUCOU\n";
 	while (socket != -1)
 	{
@@ -131,8 +142,13 @@ void	Server::addClient()
 		int	port = ntohs(address.sin_port);
 		std::cout << "SOCKET:" << socket << std::endl;
 		if (socket > 0){
-			_clients.push_back(new Client(this, socket, _ipClient, port));
 			createFd();
+			Client* client = new Client(this, socket, _ipClient, port);
+			_clients.push_back(client);
+			std::string welcome = "001 nick :Welcome to the Internet Relay Network, wahoo\n";
+			send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+			int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+			parseBuffer(buffer, &client);
 			break;
 		}
 	}

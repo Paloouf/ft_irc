@@ -2,6 +2,7 @@
 
 #include "main.hpp"
 class Server;
+class Channel;
 
 class Client{
 	public:
@@ -24,5 +25,6 @@ class Client{
 		int	_port;	
 		std::string _ipClient;
 		std::string _nick;
+		std::vector<Channel*> _chan;
 		
 };
