@@ -81,21 +81,22 @@ void	Server::waitInput(){
 	//std::cout << _clients.size() << std::endl;
 	if (val < 0)
 		std::cout << "error poll\n";
-	for (unsigned long i = 0; i < _clients.size() + 1; i++){
+	for (unsigned long i = 0; i < _clients.size() + 1; i++)
+	{
 		std::cout << "i dans le for: " << i << std::endl;
-		if (_clientsFd[i].revents != 0){
-
-			if (_clientsFd[i].fd == _sockfd){
+		if (_clientsFd[i].revents != 0)
+		{
+			if (_clientsFd[i].fd == _sockfd)
+			{
 				addClient();
 				std::cout << "bomboclat\n";}
 			//std::cout << i << " ici\n";
-		
-		else if(i > 0)
-		{
-			std::cout << "c'est le else if\n";
-			Client *client = this->_clients[i - 1];
-			receiveData(client);
-		}
+			else if(i > 0)
+			{
+				std::cout << "c'est le else if\n";
+				Client *client = this->_clients[i - 1];
+				receiveData(client);
+			}
 		}
 	}
 	//std::cout << "fin Input\n";
@@ -104,8 +105,10 @@ void	Server::waitInput(){
 void	Server::receiveData(Client *client){
 	char	buffer[8192];
 	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
-	if (err == 0){
-		for(unsigned long i = 0; i < _clients.size(); i++){
+	if (err == 0)
+	{
+		for(unsigned long i = 0; i < _clients.size(); i++)
+		{
 			if (_clients[i]->getFd() == client->getFd())
 				_clients.erase(_clients.begin() + i);
 		}
