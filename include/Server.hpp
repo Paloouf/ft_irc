@@ -13,6 +13,7 @@ class Server{
 		std::vector<Channel*>	_chan;
 		struct pollfd	*_clientsFd;
 		int	_sockfd;
+		void	parseBuffer(char* buffer, Client* client);
 		void	listening();
 		void	createFd();
 		void	waitInput();

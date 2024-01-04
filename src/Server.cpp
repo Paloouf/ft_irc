@@ -72,7 +72,7 @@ void	Server::createFd(){
 	{
 		this->_clientsFd[i + 1].fd = this->_clients[i]->getFd();
 		this->_clientsFd[i + 1].events = POLLIN;
-		std::cout << "clientFd\n";
+		std::cout << "clientFd finito\n";
 	}
 }
 
@@ -89,9 +89,9 @@ void	Server::waitInput(){
 			if (_clientsFd[i].fd == _sockfd)
 			{
 				addClient();
-				std::cout << "bomboclat\n";}
-			//std::cout << i << " ici\n";
-			else if(i > 0)
+				std::cout << "bomboclat\n";
+			}
+			else
 			{
 				std::cout << "c'est le else if\n";
 				Client *client = this->_clients[i - 1];
@@ -119,16 +119,20 @@ void	Server::receiveData(Client *client){
 		buffer[err] = '\0';
 		std::string buff = buffer;
 		std::cout << buff << std::endl;
-		
-		// if (buff.substr(0, 6) == "/nick ")
-		// 	std::cout << "lol\n";
 	}
+}
+
+void	Server::parseBuffer(char* buffer, Client* client)
+{
+	std::stringstream sBuff(buffer);
+	int fd = client->getFd();
+	fd--;
 }
 
 void	Server::addClient()
 {
+	char	buffer[8192];
 	int	socket = 0;
-
 	std::cout << "COUCOU\n";
 	while (socket != -1)
 	{
@@ -142,7 +146,19 @@ void	Server::addClient()
 			createFd();
 			Client* client = new Client(this, socket, _ipClient, port);
 			_clients.push_back(client);
-			std::string welcome = "001 ltressen :Welcome to the Internet Relay Network, wahoo\n";
+			
+			int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+			if (err != 0)
+			{
+				std::string pong = "PING localhost\n";
+				send(client->getFd(), pong.c_str(), pong.size(), 0);
+				int pongint = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+				buffer[pongint] = '\0';
+				std::string buff = buffer;
+				std::cout << "WAWAWEWA" << buff << "LOLWWWWWWWWWWW" << std::endl;
+				parseBuffer(buffer, client);
+			}
+			std::string welcome = "001 nick :Welcome to the Internet Relay Network, wahoo\n";
 			send(client->getFd(), welcome.c_str(), welcome.size(), 0);
 			break;
 		}
