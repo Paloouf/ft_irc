@@ -28,8 +28,8 @@ class Server{
 		void		checkInput();
 		std::string getPassword();
 		std::string getPort();
-		
 
+		//exceptions
 		class	portNonDigit : public std::exception
 		{
 			public:
@@ -42,6 +42,21 @@ class Server{
 		{
 			public:
 				virtual const char* what() const throw()
+				{
+					return ("Port must be below 64738");
+				}
+		};
+		class	wrongPassword : public std::exception
+		{
+			public:
+				virtual const char* what() const throw()
+				{
+					return ("Password doesn't match, deleting the client");
+				}
+		};
+		class	missingArgument : public std::exception
+		{
+			virtual const char* what() const throw()
 				{
 					return ("Port must be below 64738");
 				}
