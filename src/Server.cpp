@@ -125,8 +125,8 @@ void	Server::receiveData(Client *client){
 void	Server::parseBuffer(char* buffer, Client* client)
 {
 	std::stringstream sBuff(buffer);
-	int fd = client->getFd();
-	fd--;
+
+	client->setNick("X");
 }
 
 void	Server::addClient()
