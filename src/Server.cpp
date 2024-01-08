@@ -1,14 +1,5 @@
 #include "../include/Server.hpp"
 
-std::string	Server::convertIP(const void *address)
-{
-	const unsigned char *caddress = (const unsigned char *)address;
-
-	for (int i = 0; caddress[i] != '\0'; i++)
-		std::cout << "caddress: " << caddress[i] << " " << i << std::endl;
-	return ("truc");
-}
-
 void		Server::checkInput()
 {
 	for (int i = 0; _port[i] != 0; i++)
@@ -18,11 +9,21 @@ void		Server::checkInput()
 		throw Server::portTooHigh();
 }
 
+void Server::setTime()
+{
+    std::time_t result = std::time(NULL);
+    struct tm* timeinfo;
+
+    timeinfo = localtime(&result);
+    _date = asctime(timeinfo);
+}
+
 Server::~Server(){
 	std::cout << "Server dead\n";}
 
 Server::Server(std::string port, std::string password): _port(port), _password(password)
 {
+	setTime();
 	std::cout << "Server active" << std::endl;
 	try {checkInput();}
 	catch (Server::portNonDigit& error)
@@ -98,6 +99,7 @@ void	Server::waitInput(){
 				receiveData(client);
 			}
 		}
+
 	}
 	//std::cout << "fin Input\n";
 }
@@ -116,24 +118,79 @@ void	Server::receiveData(Client *client){
 	}
 	else
 	{
+		std::stringstream sBuff(buffer);
+		std::string str;
+		sBuff >> str;
+		if (!str.compare("PING"))
+		{
+			sBuff >> str;
+			std::string pong = "PONG " + str + "\n";
+			send(client->getFd(), pong.c_str(), pong.size(), 0);
+			std::cout << pong ;
+		}
 		buffer[err] = '\0';
 		std::string buff = buffer;
 		std::cout << buff << std::endl;
 	}
 }
 
-void	Server::parseBuffer(char* buffer, Client* client)
+void	Server::parseBuffer(Client* client)
 {
-	std::stringstream sBuff(buffer);
+	char	buffer[8192];
+	std::string extract;
+	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+	fcntl(client->getFd(), F_SETFL, O_NONBLOCK);
+	std::string test;
+	while (err != -1)
+	{
+		std::cout << buffer << std::endl;
+		std::stringstream sBuff(buffer);
+		while(sBuff >> test)
+		{
+			if (!test.compare("PASS"))
+			{
+				sBuff >> test;
+				if (test != getPassword())
+					std::cout << "ERROR: WRONG PASSWORD\n";
+				//std::cout << client->getNick() << std::endl;
+			}
+			if (!test.compare("NICK"))
+			{
+				sBuff >> test;
+				std::cout << "NIQUE: " <<  test << std::endl;
+				client->setNick(test);
+			}
+			if (!test.compare("USER"))
+			{
+				sBuff >> test;
+				client->setUser(test);
+			}
+			extract = buffer;
+			if (extract.find(":") != std::string::npos)
+			{
+				extract = buffer + extract.find(":") + 1;
+				client->setFullName(extract);
+			}
+		}
+		std::cout << err << std::endl;
+		err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
 
-	client->setNick("X");
+		std::cout << err << test << std::endl;
+	}
+	std::string welcome = RPL_WELCOME(client->getNick(), client->getFullName());
+	send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+	welcome = RPL_YOURHOST(client->getNick());
+	send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+	welcome = RPL_CREATED(client->getNick(), this->_date);
+	send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+	welcome = RPL_MYINFO(client->getNick());
+	send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+	std::cout << "nique: " << client->getNick() << std::endl;
 }
 
 void	Server::addClient()
 {
-	char	buffer[8192];
 	int	socket = 0;
-	std::cout << "COUCOU\n";
 	while (socket != -1)
 	{
 		struct	sockaddr_in address;
@@ -141,25 +198,12 @@ void	Server::addClient()
 		socket = accept(_sockfd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
 		std::string _ipClient = inet_ntoa(address.sin_addr);
 		int	port = ntohs(address.sin_port);
-		std::cout << "SOCKET:" << socket << std::endl;
-		if (socket > 0){
-			createFd();
+		if (socket > 0)
+		{
 			Client* client = new Client(this, socket, _ipClient, port);
 			_clients.push_back(client);
-			
-			int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
-			if (err != 0)
-			{
-				std::string pong = "PING localhost\n";
-				send(client->getFd(), pong.c_str(), pong.size(), 0);
-				int pongint = recv(client->getFd(), &buffer, sizeof(buffer), 0);
-				buffer[pongint] = '\0';
-				std::string buff = buffer;
-				std::cout << "WAWAWEWA" << buff << "LOLWWWWWWWWWWW" << std::endl;
-				parseBuffer(buffer, client);
-			}
-			std::string welcome = "001 nick :Welcome to the Internet Relay Network, wahoo\n";
-			send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+			createFd();
+			parseBuffer(client);
 			break;
 		}
 	}
