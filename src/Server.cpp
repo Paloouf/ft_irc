@@ -73,35 +73,24 @@ void	Server::createFd(){
 	{
 		this->_clientsFd[i + 1].fd = this->_clients[i]->getFd();
 		this->_clientsFd[i + 1].events = POLLIN;
-		std::cout << "clientFd finito\n";
 	}
 }
 
 void	Server::waitInput(){
 	int val = poll(_clientsFd, _clients.size() + 1, -1);
-	//std::cout << _clients.size() << std::endl;
 	if (val < 0)
-		std::cout << "error poll\n";
+		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
 	{
 		std::cout << "i dans le for: " << i << std::endl;
 		if (_clientsFd[i].revents != 0)
 		{
 			if (_clientsFd[i].fd == _sockfd)
-			{
 				addClient();
-				std::cout << "bomboclat\n";
-			}
 			else
-			{
-				std::cout << "c'est le else if\n";
-				Client *client = this->_clients[i - 1];
-				receiveData(client);
-			}
+				receiveData(this->_clients[i - 1]);
 		}
-
 	}
-	//std::cout << "fin Input\n";
 }
 
 void	Server::receiveData(Client *client){
@@ -126,7 +115,6 @@ void	Server::receiveData(Client *client){
 			sBuff >> str;
 			std::string pong = "PONG " + str + "\n";
 			send(client->getFd(), pong.c_str(), pong.size(), 0);
-			std::cout << pong ;
 		}
 		buffer[err] = '\0';
 		std::string buff = buffer;
@@ -136,11 +124,12 @@ void	Server::receiveData(Client *client){
 
 void	Server::parseBuffer(Client* client)
 {
-	char	buffer[8192];
 	std::string extract;
+	std::string message;
+	std::string test;
+	char	buffer[8192];
 	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
 	fcntl(client->getFd(), F_SETFL, O_NONBLOCK);
-	std::string test;
 	while (err != -1)
 	{
 		std::cout << buffer << std::endl;
@@ -150,14 +139,17 @@ void	Server::parseBuffer(Client* client)
 			if (!test.compare("PASS"))
 			{
 				sBuff >> test;
+				if (!test[0])
+				{
+					message = ERR_NEEDMOREPARAMS(client->getHostname(), "PASS");
+					send(client->getFd(), message.c_str(), message.size(), 0);
+				}
 				if (test != getPassword())
 					std::cout << "ERROR: WRONG PASSWORD\n";
-				//std::cout << client->getNick() << std::endl;
 			}
 			if (!test.compare("NICK"))
 			{
 				sBuff >> test;
-				std::cout << "NIQUE: " <<  test << std::endl;
 				client->setNick(test);
 			}
 			if (!test.compare("USER"))
@@ -172,19 +164,20 @@ void	Server::parseBuffer(Client* client)
 				client->setFullName(extract);
 			}
 		}
-		std::cout << err << std::endl;
 		err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
-
-		std::cout << err << test << std::endl;
 	}
-	std::string welcome = RPL_WELCOME(client->getNick(), client->getFullName());
-	send(client->getFd(), welcome.c_str(), welcome.size(), 0);
-	welcome = RPL_YOURHOST(client->getNick());
-	send(client->getFd(), welcome.c_str(), welcome.size(), 0);
-	welcome = RPL_CREATED(client->getNick(), this->_date);
-	send(client->getFd(), welcome.c_str(), welcome.size(), 0);
-	welcome = RPL_MYINFO(client->getNick());
-	send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+}
+
+void	Server::sendWelcome(Client* client)
+{
+	std::string message = RPL_WELCOME(client->getNick(), client->getFullName());
+	send(client->getFd(), message.c_str(), message.size(), 0);
+	message = RPL_YOURHOST(client->getNick());
+	send(client->getFd(), message.c_str(), message.size(), 0);
+	message = RPL_CREATED(client->getNick(), this->_date);
+	send(client->getFd(), message.c_str(), message.size(), 0);
+	message = RPL_MYINFO(client->getNick());
+	send(client->getFd(), message.c_str(), message.size(), 0);
 	std::cout << "nique: " << client->getNick() << std::endl;
 }
 
@@ -203,7 +196,10 @@ void	Server::addClient()
 			Client* client = new Client(this, socket, _ipClient, port);
 			_clients.push_back(client);
 			createFd();
-			parseBuffer(client);
+			try{parseBuffer(client);}
+			catch(Server::missingArgument){}
+			catch(Server::wrongPassword){}
+			sendWelcome(client);
 			break;
 		}
 	}
