@@ -96,6 +96,7 @@ void	Server::waitInput(){
 void	Server::receiveData(Client *client){
 	char	buffer[8192];
 	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+	buffer[err] = '\0';
 	if (err == 0)
 	{
 		for(unsigned long i = 0; i < _clients.size(); i++)
@@ -107,66 +108,66 @@ void	Server::receiveData(Client *client){
 	}
 	else
 	{
-		std::stringstream sBuff(buffer);
-		std::string str;
-		sBuff >> str;
-		if (!str.compare("PING"))
-		{
-			sBuff >> str;
-			std::string pong = "PONG " + str + "\n";
-			send(client->getFd(), pong.c_str(), pong.size(), 0);
-		}
-		buffer[err] = '\0';
-		std::string buff = buffer;
-		std::cout << buff << std::endl;
+		parseBuffer(buffer, client);
+		// buffer[err] = '\0';
+		// std::string buff = buffer;
+		// std::cout << buff << std::endl;
 	}
 }
 
-void	Server::parseBuffer(Client* client)
+void	Server::parseBuffer(char* buffer, Client* client)
 {
 	std::string extract;
 	std::string message;
 	std::string test;
-	char	buffer[8192];
-	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
-	fcntl(client->getFd(), F_SETFL, O_NONBLOCK);
-	while (err != -1)
+	std::cout << " " << buffer << "LOL "<< std::endl;
+	std::stringstream sBuff(buffer);
+	while(sBuff >> test)
 	{
-		std::cout << buffer << std::endl;
-		std::stringstream sBuff(buffer);
-		while(sBuff >> test)
+		if (!test.compare("CAP"))
 		{
-			if (!test.compare("PASS"))
-			{
-				sBuff >> test;
-				if (!test[0])
-				{
-					message = ERR_NEEDMOREPARAMS(client->getHostname(), "PASS");
-					send(client->getFd(), message.c_str(), message.size(), 0);
-				}
-				if (test != getPassword())
-					std::cout << "ERROR: WRONG PASSWORD\n";
-			}
-			if (!test.compare("NICK"))
-			{
-				sBuff >> test;
-				client->setNick(test);
-			}
-			if (!test.compare("USER"))
-			{
-				sBuff >> test;
-				client->setUser(test);
-			}
-			extract = buffer;
-			if (extract.find(":") != std::string::npos)
-			{
-				extract = buffer + extract.find(":") + 1;
-				client->setFullName(extract);
-			}
+			message = "CAP * LS :";
+			send(client->getFd(), message.c_str(), message.size(), 0);
 		}
-		err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+		if (!test.compare("PASS"))
+		{
+			sBuff >> test;
+			if (!test[0])
+			{
+				message = ERR_NEEDMOREPARAMS(client->getHostname(), "PASS");
+				send(client->getFd(), message.c_str(), message.size(), 0);
+			}
+			if (test != ":" + getPassword())
+				std::cout << "ERROR: WRONG PASSWORD\n";
+
+		}
+		if (!test.compare("NICK"))
+		{
+			sBuff >> test;
+			client->setNick(test);
+		}
+		if (!test.compare("USER"))
+		{
+			sBuff >> test;
+			client->setUser(test);
+		}
+		extract = buffer;
+		if (extract.find(":") != std::string::npos)
+		{
+			extract = buffer + extract.find(":") + 1;
+			std::cout << "EKSTRAKT: " << extract;
+			client->setFullName(extract);
+		}
+		if (!test.compare("PING"))
+		{
+			sBuff >> test;
+			std::string pong = "PONG " + test + "\n";
+			send(client->getFd(), pong.c_str(), pong.size(), 0);
+		}
+
 	}
 }
+
 
 void	Server::sendWelcome(Client* client)
 {
@@ -196,10 +197,12 @@ void	Server::addClient()
 			Client* client = new Client(this, socket, _ipClient, port);
 			_clients.push_back(client);
 			createFd();
-			try{parseBuffer(client);}
-			catch(Server::missingArgument){}
-			catch(Server::wrongPassword){}
-			sendWelcome(client);
+			fcntl(client->getFd(), F_SETFL, O_NONBLOCK);
+
+			// try{parseBuffer(client);}
+			// catch(Server::missingArgument()){}
+			// catch(Server::wrongPassword()){}
+			// sendWelcome(client);
 			break;
 		}
 	}
