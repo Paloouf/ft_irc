@@ -9,15 +9,18 @@ class Server{
 		Server(){};
 		std::string _port;
 		std::string _password;
+		std::string _date;
 		std::vector<Client*> _clients;
 		std::vector<Channel*>	_chan;
 		struct pollfd	*_clientsFd;
 		int	_sockfd;
-		void	parseBuffer(char* buffer, Client* client);
+		void	parseBuffer(Client* client);
+		void	sendWelcome(Client* client);
 		void	listening();
 		void	createFd();
 		void	waitInput();
 		void	addClient();
+		void	setTime();
 		void	receiveData(Client *client);
 		std::string	convertIP(const void *address);
 
@@ -28,8 +31,8 @@ class Server{
 		void		checkInput();
 		std::string getPassword();
 		std::string getPort();
+		
 
-		//exceptions
 		class	portNonDigit : public std::exception
 		{
 			public:

@@ -1,14 +1,5 @@
 #include "../include/Server.hpp"
 
-std::string	Server::convertIP(const void *address)
-{
-	const unsigned char *caddress = (const unsigned char *)address;
-
-	for (int i = 0; caddress[i] != '\0'; i++)
-		std::cout << "caddress: " << caddress[i] << " " << i << std::endl;
-	return ("truc");
-}
-
 void		Server::checkInput()
 {
 	for (int i = 0; _port[i] != 0; i++)
@@ -18,11 +9,21 @@ void		Server::checkInput()
 		throw Server::portTooHigh();
 }
 
+void Server::setTime()
+{
+    std::time_t result = std::time(NULL);
+    struct tm* timeinfo;
+
+    timeinfo = localtime(&result);
+    _date = asctime(timeinfo);
+}
+
 Server::~Server(){
 	std::cout << "Server dead\n";}
 
 Server::Server(std::string port, std::string password): _port(port), _password(password)
 {
+	setTime();
 	std::cout << "Server active" << std::endl;
 	try {checkInput();}
 	catch (Server::portNonDigit& error)
@@ -72,34 +73,24 @@ void	Server::createFd(){
 	{
 		this->_clientsFd[i + 1].fd = this->_clients[i]->getFd();
 		this->_clientsFd[i + 1].events = POLLIN;
-		std::cout << "clientFd finito\n";
 	}
 }
 
 void	Server::waitInput(){
 	int val = poll(_clientsFd, _clients.size() + 1, -1);
-	//std::cout << _clients.size() << std::endl;
 	if (val < 0)
-		std::cout << "error poll\n";
+		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
 	{
 		std::cout << "i dans le for: " << i << std::endl;
 		if (_clientsFd[i].revents != 0)
 		{
 			if (_clientsFd[i].fd == _sockfd)
-			{
 				addClient();
-				std::cout << "bomboclat\n";
-			}
 			else
-			{
-				std::cout << "c'est le else if\n";
-				Client *client = this->_clients[i - 1];
-				receiveData(client);
-			}
+				receiveData(this->_clients[i - 1]);
 		}
 	}
-	//std::cout << "fin Input\n";
 }
 
 void	Server::receiveData(Client *client){
@@ -116,23 +107,83 @@ void	Server::receiveData(Client *client){
 	}
 	else
 	{
+		std::stringstream sBuff(buffer);
+		std::string str;
+		sBuff >> str;
+		if (!str.compare("PING"))
+		{
+			sBuff >> str;
+			std::string pong = "PONG " + str + "\n";
+			send(client->getFd(), pong.c_str(), pong.size(), 0);
+		}
 		buffer[err] = '\0';
 		std::string buff = buffer;
 		std::cout << buff << std::endl;
 	}
 }
 
-void	Server::parseBuffer(char* buffer, Client* client)
+void	Server::parseBuffer(Client* client)
 {
-	std::string line = buffer;
-	line.find()
+	std::string extract;
+	std::string message;
+	std::string test;
+	char	buffer[8192];
+	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+	fcntl(client->getFd(), F_SETFL, O_NONBLOCK);
+	while (err != -1)
+	{
+		std::cout << buffer << std::endl;
+		std::stringstream sBuff(buffer);
+		while(sBuff >> test)
+		{
+			if (!test.compare("PASS"))
+			{
+				sBuff >> test;
+				if (!test[0])
+				{
+					message = ERR_NEEDMOREPARAMS(client->getHostname(), "PASS");
+					send(client->getFd(), message.c_str(), message.size(), 0);
+				}
+				if (test != getPassword())
+					std::cout << "ERROR: WRONG PASSWORD\n";
+			}
+			if (!test.compare("NICK"))
+			{
+				sBuff >> test;
+				client->setNick(test);
+			}
+			if (!test.compare("USER"))
+			{
+				sBuff >> test;
+				client->setUser(test);
+			}
+			extract = buffer;
+			if (extract.find(":") != std::string::npos)
+			{
+				extract = buffer + extract.find(":") + 1;
+				client->setFullName(extract);
+			}
+		}
+		err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+	}
+}
+
+void	Server::sendWelcome(Client* client)
+{
+	std::string message = RPL_WELCOME(client->getNick(), client->getFullName());
+	send(client->getFd(), message.c_str(), message.size(), 0);
+	message = RPL_YOURHOST(client->getNick());
+	send(client->getFd(), message.c_str(), message.size(), 0);
+	message = RPL_CREATED(client->getNick(), this->_date);
+	send(client->getFd(), message.c_str(), message.size(), 0);
+	message = RPL_MYINFO(client->getNick());
+	send(client->getFd(), message.c_str(), message.size(), 0);
+	std::cout << "nique: " << client->getNick() << std::endl;
 }
 
 void	Server::addClient()
 {
-	char	buffer[8192];
 	int	socket = 0;
-	std::cout << "COUCOU\n";
 	while (socket != -1)
 	{
 		struct	sockaddr_in address;
@@ -140,15 +191,15 @@ void	Server::addClient()
 		socket = accept(_sockfd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
 		std::string _ipClient = inet_ntoa(address.sin_addr);
 		int	port = ntohs(address.sin_port);
-		std::cout << "SOCKET:" << socket << std::endl;
-		if (socket > 0){
-			createFd();
+		if (socket > 0)
+		{
 			Client* client = new Client(this, socket, _ipClient, port);
 			_clients.push_back(client);
-			std::string welcome = "001 nick :Welcome to the Internet Relay Network, wahoo\n";
-			send(client->getFd(), welcome.c_str(), welcome.size(), 0);
-			int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
-			parseBuffer(buffer, &client);
+			createFd();
+			try{parseBuffer(client);}
+			catch(Server::missingArgument){}
+			catch(Server::wrongPassword){}
+			sendWelcome(client);
 			break;
 		}
 	}
