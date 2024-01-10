@@ -11,7 +11,9 @@ class Client{
 		Client&	operator=(const Client& ref);
 
 		void	addBuffer(char *buffer);
+		void	parseBuffer(char *buffer);
 		void	resetBuffer();
+		void	sendWelcome();
 
 		//GETTERS
 		int	getFd() const{return _fd;}
@@ -30,13 +32,13 @@ class Client{
 	private:
 		Server* _server;
 		int	_fd;
-		std::string _hostname;
+		int	_negoCount;
 		int	_port;
 		std::string _fullName;
 		std::string _user;
 		std::string _nick;
 		std::string _command;
-		int	_negoCount;
+		std::string _hostname;		
 		std::vector<Channel*> _chan;
 		
 };

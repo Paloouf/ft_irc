@@ -1,25 +1,6 @@
 #include "../include/Server.hpp"
 
-void		Server::checkInput()
-{
-	for (int i = 0; _port[i] != 0; i++)
-		if (!std::isdigit(_port[i]))
-			throw Server::portNonDigit();
-	if (std::atol(_port.c_str()) > 64738 || _port.size() > 5)
-		throw Server::portTooHigh();
-}
-
-void Server::setTime()
-{
-    std::time_t result = std::time(NULL);
-    struct tm* timeinfo;
-
-    timeinfo = localtime(&result);
-    _date = asctime(timeinfo);
-}
-
-Server::~Server(){
-	std::cout << "Server dead\n";}
+//SERVER LAUNCHING//
 
 Server::Server(std::string port, std::string password): _port(port), _password(password)
 {
@@ -33,11 +14,28 @@ Server::Server(std::string port, std::string password): _port(port), _password(p
 	listening();
 }
 
-std::string	Server::getPassword(){
-	return (_password);}
+void Server::setTime()
+{
+    std::time_t result = std::time(NULL);
+    struct tm* timeinfo;
 
-std::string Server::getPort(){
-	return (_port);}
+    timeinfo = localtime(&result);
+    _date = asctime(timeinfo);
+}
+
+void		Server::checkInput()
+{
+	for (int i = 0; _port[i] != 0; i++)
+		if (!std::isdigit(_port[i]))
+			throw Server::portNonDigit();
+	if (std::atol(_port.c_str()) > 64738 || _port.size() > 5)
+		throw Server::portTooHigh();
+}
+
+Server::~Server(){
+	std::cout << "Server dead\n";}
+
+//SERVER LISTENING//
 
 void	Server::listening(){
 	_chan.push_back(new Channel(this, "&General"));
@@ -61,7 +59,31 @@ void	Server::listening(){
 		waitInput();
 }
 
-void	Server::createFd(){
+void	Server::waitInput(){
+	int val = poll(_clientsFd, _clients.size() + 1, -1);
+	if (val < 0)
+		std::cout << "Error poll\n";
+	for (unsigned long i = 0; i < _clients.size() + 1; i++)
+	{
+		std::cout << "i dans le for: " << i << std::endl;
+		if (_clientsFd[i].revents != 0)
+		{
+			std::cout << "YO\n";
+			if (_clientsFd[i].fd == _sockfd)
+				addClient();
+			else
+			{
+				std::cout << " c'est le else" << std::endl;
+				receiveData(this->_clients[i - 1]);
+			}
+		}
+	}
+}
+
+//NEW CLIENT HANDLING//
+
+void	Server::createFd()
+{
 	if (this->_clientsFd)
 		delete [] this->_clientsFd;
 	this->_clientsFd = new struct pollfd[_clients.size() + 1];
@@ -76,111 +98,6 @@ void	Server::createFd(){
 	}
 }
 
-void	Server::waitInput(){
-	int val = poll(_clientsFd, _clients.size() + 1, -1);
-	if (val < 0)
-		std::cout << "Error poll\n";
-	for (unsigned long i = 0; i < _clients.size() + 1; i++)
-	{
-		std::cout << "i dans le for: " << i << std::endl;
-		if (_clientsFd[i].revents != 0)
-		{
-			if (_clientsFd[i].fd == _sockfd)
-				addClient();
-			else
-				receiveData(this->_clients[i - 1]);
-		}
-	}
-}
-
-void	Server::receiveData(Client *client){
-	char	buffer[8192];
-	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
-	buffer[err] = '\0';
-	if (err == 0)
-	{
-		for(unsigned long i = 0; i < _clients.size(); i++)
-		{
-			if (_clients[i]->getFd() == client->getFd())
-				_clients.erase(_clients.begin() + i);
-		}
-		std::cout << "client disconnected\n";
-	}
-	else
-	{
-		parseBuffer(buffer, client);
-		// buffer[err] = '\0';
-		// std::string buff = buffer;
-		// std::cout << buff << std::endl;
-	}
-}
-
-void	Server::parseBuffer(char* buffer, Client* client)
-{
-	std::string extract;
-	std::string message;
-	std::string test;
-	std::cout << " " << buffer << "LOL "<< std::endl;
-	std::stringstream sBuff(buffer);
-	while(sBuff >> test)
-	{
-		if (!test.compare("CAP"))
-		{
-			message = "CAP * LS :";
-			send(client->getFd(), message.c_str(), message.size(), 0);
-		}
-		if (!test.compare("PASS"))
-		{
-			sBuff >> test;
-			if (!test[0])
-			{
-				message = ERR_NEEDMOREPARAMS(client->getHostname(), "PASS");
-				send(client->getFd(), message.c_str(), message.size(), 0);
-			}
-			if (test != ":" + getPassword())
-				std::cout << "ERROR: WRONG PASSWORD\n";
-
-		}
-		if (!test.compare("NICK"))
-		{
-			sBuff >> test;
-			client->setNick(test);
-		}
-		if (!test.compare("USER"))
-		{
-			sBuff >> test;
-			client->setUser(test);
-		}
-		extract = buffer;
-		if (extract.find(":") != std::string::npos)
-		{
-			extract = buffer + extract.find(":") + 1;
-			std::cout << "EKSTRAKT: " << extract;
-			client->setFullName(extract);
-		}
-		if (!test.compare("PING"))
-		{
-			sBuff >> test;
-			std::string pong = "PONG " + test + "\n";
-			send(client->getFd(), pong.c_str(), pong.size(), 0);
-		}
-
-	}
-}
-
-
-void	Server::sendWelcome(Client* client)
-{
-	std::string message = RPL_WELCOME(client->getNick(), client->getFullName());
-	send(client->getFd(), message.c_str(), message.size(), 0);
-	message = RPL_YOURHOST(client->getNick());
-	send(client->getFd(), message.c_str(), message.size(), 0);
-	message = RPL_CREATED(client->getNick(), this->_date);
-	send(client->getFd(), message.c_str(), message.size(), 0);
-	message = RPL_MYINFO(client->getNick());
-	send(client->getFd(), message.c_str(), message.size(), 0);
-	std::cout << "nique: " << client->getNick() << std::endl;
-}
 
 void	Server::addClient()
 {
@@ -198,13 +115,32 @@ void	Server::addClient()
 			_clients.push_back(client);
 			createFd();
 			fcntl(client->getFd(), F_SETFL, O_NONBLOCK);
-
-			// try{parseBuffer(client);}
-			// catch(Server::missingArgument()){}
-			// catch(Server::wrongPassword()){}
-			// sendWelcome(client);
 			break;
 		}
 	}
 }
+
+//DATA HANDLING//
+
+void	Server::receiveData(Client *client){
+	char	buffer[8192];
+	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+	buffer[err] = '\0';
+	if (err == 0 && client->getCommand().size() == 0)
+	{
+		for(unsigned long i = 0; i < _clients.size(); i++)
+		{
+			if (_clients[i]->getFd() == client->getFd())
+				_clients.erase(_clients.begin() + i);
+		}
+		std::cout << "client disconnected\n";
+	}
+	else
+		client->parseBuffer(buffer);
+}
+
+
+
+
+
 
