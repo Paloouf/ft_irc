@@ -10,6 +10,9 @@ class Client{
 		~Client();
 		Client&	operator=(const Client& ref);
 
+		void	addBuffer(char *buffer);
+		void	resetBuffer();
+
 		//GETTERS
 		int	getFd() const{return _fd;}
 		std::string const &	getHostname() const{return _hostname;}
@@ -17,6 +20,7 @@ class Client{
 		std::string getNick() const {return _nick;}
 		std::string getHost() const {return _hostname;}
 		std::string getFullName() const {return _fullName;}
+		std::string getCommand() const {return _command;}
 
 		//SETTERS
 		void	setNick(const std::string nick){this->_nick = nick;}
@@ -31,6 +35,8 @@ class Client{
 		std::string _fullName;
 		std::string _user;
 		std::string _nick;
+		std::string _command;
+		int	_negoCount;
 		std::vector<Channel*> _chan;
 		
 };

@@ -14,7 +14,8 @@ class Server{
 		std::vector<Channel*>	_chan;
 		struct pollfd	*_clientsFd;
 		int	_sockfd;
-		void	parseBuffer(Client* client);
+		void	parseBuffer(char* buffer, Client* client);
+		void	sendWelcome(Client* client);
 		void	listening();
 		void	createFd();
 		void	waitInput();
@@ -46,6 +47,22 @@ class Server{
 				virtual const char* what() const throw()
 				{
 					return ("Port must be below 64738");
+				}
+		};
+		class	wrongPassword : public std::exception
+		{
+			public:
+				virtual const char* what() const throw()
+				{
+					return ("Password doesn't match, deleting the client");
+				}
+		};
+		class	missingArgument : public std::exception
+		{
+			public:
+				virtual const char* what() const throw()
+				{
+					return ("Missing Arguments, deleting the client");
 				}
 		};
 };
