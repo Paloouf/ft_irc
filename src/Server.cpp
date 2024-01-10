@@ -68,6 +68,7 @@ void	Server::waitInput(){
 		std::cout << "i dans le for: " << i << std::endl;
 		if (_clientsFd[i].revents != 0)
 		{
+			std::cout << "YO\n";
 			if (_clientsFd[i].fd == _sockfd)
 				addClient();
 			else
