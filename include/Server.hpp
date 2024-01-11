@@ -1,6 +1,7 @@
 #pragma once
 
 #include "main.hpp"
+#include <map>
 class Client;
 class Channel;
 
@@ -11,7 +12,8 @@ class Server{
 		std::string _password;
 		std::string _date;
 		std::vector<Client*> _clients;
-		std::vector<Channel*>	_chan;
+		//std::vector<Channel*>	_chan;
+		std::map<std::string, Channel*> _chanMap;
 		struct pollfd	*_clientsFd;
 		int	_sockfd;
 		void	parseBuffer(char* buffer, Client* client);
@@ -32,7 +34,9 @@ class Server{
 		std::string getDate(){return _date;}
 		std::string getPassword(){return _password;}
 		std::string getPort(){return _port;}
-		
+		std::map<std::string, Channel*> *getChanMap() {return &_chanMap;}
+		Channel		*createChan(std::string nameChan, Client* autor);
+
 
 		class	portNonDigit : public std::exception
 		{

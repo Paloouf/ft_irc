@@ -100,17 +100,18 @@ void	Client::parseMsg(char *buffer)
 		std::cout << pong;
 		send(getFd(), pong.c_str(), pong.size(), 0);
 	}
-	if (command.size() > 4 && command.substr(0,4) == "JOIN")
+	if (command.size() > 6 && command.substr(0,4) == "JOIN" && command.substr(5,6) == " #")
 	{
-		std::string nameChan = command.substr(command.find(":") + 1);
-		std::map<std::string, Channel*>::iterator		it = _server->find(nameChan);
-		if (it != _server.end())
+		std::string nameChan = command.substr(command.find("#") + 1);
+		std::map<std::string, Channel*>::iterator		it = _server->getChanMap()->find(nameChan);
+		if (it != _server->getChanMap()->end())
 		{
-			_chan.push_front(*it);
+			_chan.push_back(it->second);
 		}
 		else
 		{
-			_server->createChan(nameChan, &this);
+			_chan.push_back(_server->createChan(nameChan, this));
+			std::cout << "channel: " << nameChan << " was created by " << getFullName() << " at " << _server->getDate() << std::endl;
 		}
 	}
 }

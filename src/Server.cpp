@@ -33,7 +33,16 @@ void		Server::checkInput()
 }
 
 Server::~Server(){
-	std::cout << "Server dead\n";}
+
+	std::cout << "Server dead\n";
+	std::map<std::string, Channel*>::iterator		it = _chanMap.begin();
+	while (it != _chanMap.end())
+	{
+		delete it->second;
+		it++;
+	}
+	_chanMap.clear();
+}
 
 //SERVER LISTENING//
 
@@ -119,6 +128,12 @@ void	Server::addClient()
 	}
 }
 
+Channel		*Server::createChan(std::string nameChan, Client* autor)
+{
+	Channel *newChan = new Channel(this, autor, nameChan);
+	_chanMap.insert(std::pair<std::string, Channel*>(nameChan, newChan));
+	return (newChan);
+}
 //DATA HANDLING//
 
 void	Server::receiveData(Client *client){

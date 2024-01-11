@@ -9,14 +9,15 @@ class Client;
 
 class Channel{
 	public:
-		Channel(Server* server, std::string name);
+		Channel(Server* server, Client* creator, std::string name);
 		~Channel();
 
 		std::string getName()const {return _name;}
 	private:
 		Channel();
-		Server*	_server;
-		std::string	_name;
-		std::vector<Client*> _chanClients;
-		
+		Server*			_server;
+		std::string		_name;
+		Client*			_creator;
+		std::vector<Client*> 	_admins;
+		std::vector<Client*> 	_clients;
 };

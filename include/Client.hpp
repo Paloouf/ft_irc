@@ -12,6 +12,8 @@ class Client{
 
 		void	addBuffer(char *buffer);
 		void	parseBuffer(char *buffer);
+		void	parseNego(char *buffer);
+		void	parseMsg(char *buffer);
 		void	resetBuffer();
 		void	sendWelcome();
 
@@ -19,12 +21,14 @@ class Client{
 		int	getFd() const{return _fd;}
 		std::string const &	getHostname() const{return _hostname;}
 		int	getPort() const {return _port;}
+		int getNego() const {return _negoCount;}
 		std::string getNick() const {return _nick;}
 		std::string getHost() const {return _hostname;}
 		std::string getFullName() const {return _fullName;}
 		std::string getCommand() const {return _command;}
 
 		//SETTERS
+		void	setNego(const int nego){this->_negoCount = nego;}
 		void	setNick(const std::string nick){this->_nick = nick;}
 		void	setUser(const std::string user){this->_user = user;}
 		void	setHost(const std::string hostname){this->_hostname = hostname;}
@@ -39,6 +43,5 @@ class Client{
 		std::string _nick;
 		std::string _command;
 		std::string _hostname;		
-		std::vector<Channel*> _chan;
-		
+		std::vector<Channel*> _chan;	
 };
