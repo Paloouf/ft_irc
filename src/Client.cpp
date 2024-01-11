@@ -3,7 +3,7 @@
 Client::Client(Server *server, int fd, std::string hostname, int port) :_server(server), _fd(fd), _port(port),_hostname(hostname){
 	std::cout << &_server << "Test client, fd: " << this->getFd() << ", hostname: " << this->getHostname() << std::flush;
 	std::cout << ", port: " << this->getPort() << std::endl;
-	this->resetBuffer();	
+	this->resetBuffer();
 	_negoCount = 0;
 }
 
@@ -84,8 +84,8 @@ void	Client::parseNego(char *buffer)
 			sendWelcome();
 			_negoCount = 5;
 		}
-		
-		
+
+
 	}
 	resetBuffer();
 }
@@ -95,13 +95,23 @@ void	Client::parseMsg(char *buffer)
 	std::string command = buffer;
 	std::cout << "MSG:" << command << std::endl;
 	if (command.substr(0,4) == "PING")
-	{	
+	{
 		std::string pong = "PONG " + command.substr(5) + "\n";
 		std::cout << pong;
 		send(getFd(), pong.c_str(), pong.size(), 0);
 	}
 	if (command.size() > 4 && command.substr(0,4) == "JOIN")
 	{
+		std::string nameChan = command.substr(command.find(":") + 1);
+		std::map<std::string, Channel*>::iterator		it = _server->find(nameChan);
+		if (it != _server.end())
+		{
+			_chan.push_front(*it);
+		}
+		else
+		{
+			_server->createChan(nameChan, &this);
+		}
 	}
 }
 
