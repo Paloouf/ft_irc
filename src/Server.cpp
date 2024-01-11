@@ -38,7 +38,6 @@ Server::~Server(){
 //SERVER LISTENING//
 
 void	Server::listening(){
-	_chan.push_back(new Channel(this, "&General"));
 	struct sockaddr_in address;
 	struct in_addr addr;
 	addr.s_addr = INADDR_ANY;
@@ -68,6 +67,7 @@ void	Server::waitInput(){
 		std::cout << "i dans le for: " << i << std::endl;
 		if (_clientsFd[i].revents != 0)
 		{
+			std::cout << "YO\n";
 			if (_clientsFd[i].fd == _sockfd)
 				addClient();
 			else
