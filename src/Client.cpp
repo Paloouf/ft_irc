@@ -30,55 +30,81 @@ void	Client::resetBuffer()
 
 void	Client::parseBuffer(char * buffer)
 {
+	if (_negoCount < 5)
+		parseNego(buffer);
+	else
+		parseMsg(buffer);
+}
+
+void	Client::parseNego(char *buffer)
+{
 	std::string command = buffer;
 	std::cout << command << std::endl;
-	if (command.size() != 0)
+	addBuffer(buffer);
+	std::cout << "here" << std::endl;
+	std::stringstream 	sBuff(getCommand());
+	std::string			message;
+	while (getline(sBuff, command))
 	{
-		addBuffer(buffer);
-		std::cout << "here" << std::endl;
-		std::stringstream 	sBuff(getCommand());
-		std::string			message;
-		while (getline(sBuff, command))
+		std::cerr << "Negotiation step : Message from client " << getFd() << " : <" << buffer << ">" <<std::endl;
+		if (command.size() > 3 && command.substr(0,3) == "CAP" && getNego() == 0)
 		{
-			std::cout << "YOOOOOOOOOOOOOOO\n";		
-			std::cout << "KAKOU: " << command << std::endl;
-			if (command.substr(0,3) == "CAP")
-			{
-				message = "CAP * LS :";
-				send(getFd(), message.c_str(), message.size(), 0);
-				std::cout << message << std::endl;
-			}
-			if (command.substr(0,4) == "PASS")
-			{
-				sBuff >> command;
-				if (!command[0])
-				{
-					message = ERR_NEEDMOREPARAMS(getHostname(), "PASS");
-					send(getFd(), message.c_str(), message.size(), 0);
-				}
-				if (command != "PASS :" + _server->getPassword())
-					std::cout << "ERROR: WRONG PASSWORD\n";
-			}
-			if (command.substr(0,4) == "NICK")
-			{
-				setNick(command.substr(5));
-			}
-			if (command.substr(0,4) == "USER")
-			{
-				setUser(command.substr(5));
-				sendWelcome();
-			}
-			if (command.substr(0,4) == "PING")
-			{
-				
-				std::string pong = "PONG " + command.substr(5) + "\n";
-				send(getFd(), pong.c_str(), pong.size(), 0);
-			}
-			
+			message = "CAP * LS :\n";
+			send(getFd(), message.c_str(), message.size(), 0);
+			std::cout << "Responding with message <" << message << "> to client " << getFd() << std::endl << std::endl;
+			setNego(1);
 		}
+		else if (command.size() > 4 && command.substr(0,4) == "PASS" && getNego() == 1)
+		{
+			sBuff >> command;
+			if (!command[0])
+			{
+				message = ERR_NEEDMOREPARAMS(getHostname(), "PASS");
+				std::cout << "Responding with message <" << message << "> to client " << getFd() << std::endl << std::endl;
+				send(getFd(), message.c_str(), message.size(), 0);
+			}
+			if (command != "PASS :" + _server->getPassword())
+			{
+				message = ERR_PASSWDMISMATCH(getHostname());
+				std::cout << "Responding with message <" << message << "> to client " << getFd() << std::endl << std::endl;
+				send(getFd(), message.c_str(), message.size(), 0);
+				throw Server::wrongPassword();
+			}
+			std::cout << "here" << std::endl;
+			setNego(2);
+		}
+		else if (command.substr(0,4) == "NICK")
+		{
+			setNick(command.substr(5));
+		}
+		if (command.substr(0,4) == "USER")
+		{
+			setUser(command.substr(5));
+			setFullName(command.substr(command.find(":") + 1));
+			sendWelcome();
+			_negoCount = 5;
+		}
+		
+		
 	}
 	resetBuffer();
 }
+
+void	Client::parseMsg(char *buffer)
+{
+	std::string command = buffer;
+	std::cout << "MSG:" << command << std::endl;
+	if (command.substr(0,4) == "PING")
+	{	
+		std::string pong = "PONG " + command.substr(5) + "\n";
+		std::cout << pong;
+		send(getFd(), pong.c_str(), pong.size(), 0);
+	}
+	if (command.size() > 4 && command.substr(0,4) == "JOIN")
+	{
+	}
+}
+
 
 void	Client::sendWelcome()
 {

@@ -38,7 +38,6 @@ Server::~Server(){
 //SERVER LISTENING//
 
 void	Server::listening(){
-	_chan.push_back(new Channel(this, "&General"));
 	struct sockaddr_in address;
 	struct in_addr addr;
 	addr.s_addr = INADDR_ANY;

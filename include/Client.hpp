@@ -12,6 +12,8 @@ class Client{
 
 		void	addBuffer(char *buffer);
 		void	parseBuffer(char *buffer);
+		void	parseNego(char *buffer);
+		void	parseMsg(char *buffer);
 		void	resetBuffer();
 		void	sendWelcome();
 
