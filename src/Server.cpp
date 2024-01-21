@@ -52,7 +52,7 @@ void	Server::listening(){
 
 	bind(_sockfd, (struct sockaddr*)&address, sizeof(address));
 	listen(_sockfd, 8);
-	std::cout << "Waiting for connection...\n";
+	std::cout << "Waiting for connection...\n\n";
 	createFd();
 	while (1)
 		waitInput();
@@ -64,17 +64,12 @@ void	Server::waitInput(){
 		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
 	{
-		std::cout << "i dans le for: " << i << std::endl;
 		if (_clientsFd[i].revents != 0)
 		{
-			std::cout << "YO\n";
 			if (_clientsFd[i].fd == _sockfd)
 				addClient();
 			else
-			{
-				std::cout << " c'est le else" << std::endl;
 				receiveData(this->_clients[i - 1]);
-			}
 		}
 	}
 }
@@ -86,10 +81,8 @@ void	Server::createFd()
 	if (this->_clientsFd)
 		delete [] this->_clientsFd;
 	this->_clientsFd = new struct pollfd[_clients.size() + 1];
-
 	this->_clientsFd[0].fd = this->_sockfd;
 	this->_clientsFd[0].events = POLLIN;
-
 	for (unsigned long i = 0; i < this->_clients.size(); i++)
 	{
 		this->_clientsFd[i + 1].fd = this->_clients[i]->getFd();
@@ -119,6 +112,21 @@ void	Server::addClient()
 	}
 }
 
+void	Server::deleteClient(Client* client)
+{
+	std::vector<Client*>::iterator it = _clients.begin();
+	int i = 0;
+	while((*it)->getFd() != client->getFd())
+	{
+		it++;
+		i++;
+	}
+	_clients.erase(_clients.begin() + i);
+	close(client->getFd());
+	delete client;
+	createFd();
+}
+
 //DATA HANDLING//
 
 void	Server::receiveData(Client *client){
@@ -127,19 +135,27 @@ void	Server::receiveData(Client *client){
 	buffer[err] = '\0';
 	if (err == 0 && client->getCommand().size() == 0)
 	{
-		for(unsigned long i = 0; i < _clients.size(); i++)
-		{
-			if (_clients[i]->getFd() == client->getFd())
-				_clients.erase(_clients.begin() + i);
-		}
+		deleteClient(client);
 		std::cout << "client disconnected\n";
 	}
 	else
 		client->parseBuffer(buffer);
 }
 
+//CHANNEL CHECK//
 
-
+void	Server::checkChannel(Client *client, std::string buffer){
+	if (_chanMap.find(buffer) != _chanMap.end())
+	{
+		//Need to RPL to join chan + topic if any + client list
+		//Need to add client to vector of channel
+		std::cout << buffer << "pipou\n";
+	}
+	else{
+		_chanMap.insert(make_pair(buffer, new Channel(this, buffer.substr(5, buffer.size() - 6), client)));
+		//Need to send RPL_channel created for Konversation to create a chan
+	}
+}
 
 
 
