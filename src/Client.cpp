@@ -51,6 +51,8 @@ void	Client::parseBuffer(char * buffer)
 		parseMsg(buffer);
 }
 
+//BEFORE NEGOTIATION//
+
 void	Client::parseNego(char *buffer)
 {
 	std::string command = buffer;
@@ -92,7 +94,7 @@ void	Client::parseNego(char *buffer)
 		}
 		else if (command.size() > 4 && command.substr(0,4) == "USER" && getNego() == 3)
 		{
-			setUser(command.substr(5));
+			setUser(strtok(command.substr(5), ' '));
 			setFullName(command.substr(command.find(":") + 1));
 			sendWelcome();
 			setNego(4);
@@ -102,22 +104,6 @@ void	Client::parseNego(char *buffer)
 	}
 	resetBuffer();
 }
-
-void	Client::parseMsg(char *buffer)
-{
-	std::string command = buffer;
-	std::cout << "MSG:" << command << std::endl;
-	if (command.substr(0,4) == "PING")
-	{	
-		std::string pong = "PONG " + command.substr(5) + "\n";
-		std::cout << pong;
-		send(getFd(), pong.c_str(), pong.size(), 0);
-	}
-	if (command.size() > 4 && command.substr(0,4) == "JOIN")
-	{
-	}
-}
-
 
 void	Client::sendWelcome()
 {
@@ -134,4 +120,34 @@ void	Client::sendWelcome()
 	send(getFd(), message.c_str(), message.size(), 0);
 	std::cout << "Responding to client " << getFd() << " with message " << message;
 	std::cout << "Successfully registered client " << getHostname() << std::endl << std::endl;
+}
+
+//AFTER NEGOTIATION//
+
+void	Client::parseMsg(char *buffer)
+{
+	std::string command = buffer;
+	std::cout << "MSG:" << command << std::endl;
+	if (command.size > 4 && command.substr(0,4) == "PING")
+	{	
+		std::cout << "Getting Ping request from client " << getFd() << std::endl;
+		std::string pong = "PONG " + command.substr(5) + "\n";
+		std::cout << "Responding to ping request from client " << getFd() << " with message " << pong << std::endl;
+		send(getFd(), pong.c_str(), pong.size(), 0);
+	}
+	if (command.size() > 4 && command.substr(0,4) == "JOIN")
+	{
+		getServer()->checkChannel(this, command);
+	}
+	if (command.size(0) > 3 && command.substr(0,3) == "WHO")
+		getServer()->whoReply(this, buffer);
+}
+
+//GETTER//
+
+void	Client::getFirstChannel()
+{
+	if(_chan.empty())
+		return ("*");
+	return (chan[0]->getName());
 }

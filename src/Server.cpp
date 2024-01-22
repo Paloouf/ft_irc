@@ -142,8 +142,46 @@ void	Server::receiveData(Client *client){
 		client->parseBuffer(buffer);
 }
 
+//CHANNEL CHECK//
 
+void	Server::checkChannel(Client *client, std::string buffer){
+	if (_chanMap.find(buffer) != _chanMap.end())
+	{
+		//Need to RPL to join chan + topic if any + client list
+		//Need to add client to vector of channel
+		std::cout << buffer << "pipou\n";
+	}
+	else{
+		_chanMap.insert(make_pair(buffer, new Channel(this, buffer.substr(5, buffer.size() - 6), client)));
+		//Need to send RPL_channel created for Konversation to create a chan
+	}
+}
 
+//DATA REPLYING//
 
+void	Server::whoReply(Client* client, char* buffer)
+{
+	buffer += 4;
+	if(buffer[0] == '#')
+		replyChannel(client, buffer);
+	else
+		replyUser(client, buffer);
+}
 
+void	Server::replyChannel(Client* client, char* buffer)
+{
+	(void)client;
+	std::cout << buffer;
+}
 
+void	Server::replyUser(Client* client, char* buffer)
+{
+	std::string	message;
+	std::string name = buffer;
+	std::vector<Client*>::iterator it = _clients.begin();
+	while(it->getUser() != name)
+		it++;
+	
+	message = RPL_WHOREPLY(client->getHostname(), client->getFirstChannel(), client->getUser(), client->getHostname(), "EasyRC.gg", client->getNick(), client->getFullName());
+	send(client->getFd(), message.c_str(), message.size(), 0);
+}

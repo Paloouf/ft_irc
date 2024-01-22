@@ -22,7 +22,6 @@ class Server{
 		void	createFd();
 		void	waitInput();
 		void	addClient();
-		
 		void	setTime();
 		void	receiveData(Client *client);
 		std::string	convertIP(const void *address);
@@ -33,11 +32,13 @@ class Server{
 		Server(std::string port, std::string password);
 		void		checkInput();
 		void		deleteClient(Client* client);
+		void		checkChannel(Client* client, std::string buffer);
+		void		whoReply(Client* client, char* buffer);
+		void		replyChannel(Client* client, char* buffer);
+		void		replyUser(Client* client, char* buffer);
 		std::string getDate(){return _date;}
 		std::string getPassword(){return _password;}
-		std::string getPort(){return _port;}
-		
-		
+		std::string getPort(){return _port;}	
 		class	portNonDigit : public std::exception
 		{
 			public:

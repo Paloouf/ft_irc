@@ -9,7 +9,7 @@ class Client;
 
 class Channel{
 	public:
-		Channel(Server* server, std::string name);
+		Channel(Server* server, std::string name, Client* client);
 		~Channel();
 
 		std::string getName()const {return _name;}
