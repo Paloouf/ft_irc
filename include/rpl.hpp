@@ -9,3 +9,4 @@
 #define RPL_MYINFO(client)		            "004 " + client + " EasyRC v0.1 N/A N/A\n"
 #define ERR_NEEDMOREPARAMS(client, command) "461 " + client + " " + command + ":Not enough parameters\n"
 #define ERR_PASSWDMISMATCH(client)          "464 " + client + " :Password incorrect\n"
+#define RPL_TOPIC(client, channel, topic)	"332" + client + " " + channel + " :" + topic 

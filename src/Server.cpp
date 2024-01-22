@@ -2,7 +2,7 @@
 
 //SERVER LAUNCHING//
 
-Server::Server(std::string port, std::string password): _port(port), _password(password)
+Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL) 
 {
 	setTime();
 	std::cout << "Server active" << std::endl;
@@ -66,8 +66,10 @@ void	Server::waitInput(){
 	{
 		if (_clientsFd[i].revents != 0)
 		{
-			if (_clientsFd[i].fd == _sockfd)
+			if (_clientsFd[i].fd == _sockfd){
 				addClient();
+				break;
+			}
 			else
 				receiveData(this->_clients[i - 1]);
 		}
@@ -149,10 +151,11 @@ void	Server::checkChannel(Client *client, std::string buffer){
 	{
 		//Need to RPL to join chan + topic if any + client list
 		//Need to add client to vector of channel
-		std::cout << buffer << "pipou\n";
+		_chanMap[buffer]->join(client);
+		//std::cout << buffer << "pipou\n";
 	}
 	else{
-		_chanMap.insert(make_pair(buffer, new Channel(this, buffer.substr(5, buffer.size() - 6), client)));
+		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
 		//Need to send RPL_channel created for Konversation to create a chan
 	}
 }
