@@ -13,7 +13,9 @@ class Channel{
 		~Channel();
 
 		std::string getName()const {return _name;}
+		std::string getTopic() const {return _topic;}
 		void	join(Client* client);
+		void	setTopic(std::string topic) {_topic = topic;}
 	private:
 		Channel();
 		Server*			_server;

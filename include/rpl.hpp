@@ -10,3 +10,6 @@
 #define ERR_NEEDMOREPARAMS(client, command) "461 " + client + " " + command + ":Not enough parameters\n"
 #define ERR_PASSWDMISMATCH(client)          "464 " + client + " :Password incorrect\n"
 #define RPL_TOPIC(client, channel, topic)	"332" + client + " " + channel + " :" + topic 
+#define RPL_NOTOPIC(client, channel)					"331 " + client + " " + channel + " :No topic is set"
+#define RPL_NAMREPLY(client, channel, users)			"353 " + client + " = " + channel + " :" + users
+#define RPL_ENDOFNAMES(client, channel)					"366 " + client + " " + channel + " :End of /NAMES list."
