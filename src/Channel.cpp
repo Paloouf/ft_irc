@@ -9,7 +9,7 @@ Channel::~Channel(){}
 
 void Channel::join(Client* client){
     std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-    std::string join = "JOIN " + prefix + " " + _name + "\r\n";
+    std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
     send(client->getFd(), join.c_str(), join.size(), 0);
     if (!_topic.compare(""))
     {
@@ -29,6 +29,6 @@ void Channel::join(Client* client){
     std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
     send(client->getFd(), endofnames.c_str(), endofnames.size(), 0);
     _clients.push_back(client);
-	std::cout << userlist << std::endl;
+	std::cout << join << userlist << endofnames << std::endl;
     //Need to make more functions to send /PRIVMSGS to other clients in the channel, set Topic with /TOPIC
 }

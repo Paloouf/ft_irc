@@ -92,8 +92,9 @@ void	Client::parseNego(char *buffer)
 		}
 		else if (command.size() > 4 && command.substr(0,4) == "USER" && getNego() == 3)
 		{
-			std::cout << "command: " << command << std::endl;
-			setUser(command.substr(5, command.find(" ")));
+			char* commandbis = &command[5];
+			setUser(strtok(commandbis, " "));
+			std::cout << getUser() << " poueeeeeeeeeeeettt\n";
 			setFullName(command.substr(command.find(":") + 1));
 			sendWelcome();
 			setNego(4);
