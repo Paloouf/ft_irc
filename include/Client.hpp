@@ -24,6 +24,7 @@ class Client{
 		int getNego() const {return _negoCount;}
 		Server*		getServer() {return _server;}
 		std::string getNick() const {return _nick;}
+		std::string getUser() const {return _user;}
 		std::string getHost() const {return _hostname;}
 		std::string getFullName() const {return _fullName;}
 		std::string getCommand() const {return _command;}

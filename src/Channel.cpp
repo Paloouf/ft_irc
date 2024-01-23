@@ -8,7 +8,8 @@ Channel::Channel(Server *server, std::string name, Client* client) :_server(serv
 Channel::~Channel(){}
 
 void Channel::join(Client* client){
-    std::string join = "JOIN " + _creator->getNick() + " " + _name + "\r\n";
+    std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
+    std::string join = "JOIN " + prefix + " " + _name + "\r\n";
     send(client->getFd(), join.c_str(), join.size(), 0);
     if (!_topic.compare(""))
     {
@@ -25,6 +26,9 @@ void Channel::join(Client* client){
     }
     std::string userlist = RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str());
     send(client->getFd(), userlist.c_str(), userlist.size(), 0);
-	std::cout << "pipouet: " << client->getFd() << std::endl;
+    std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
+    send(client->getFd(), endofnames.c_str(), endofnames.size(), 0);
+    _clients.push_back(client);
+	std::cout << userlist << std::endl;
     //Need to make more functions to send /PRIVMSGS to other clients in the channel, set Topic with /TOPIC
 }
