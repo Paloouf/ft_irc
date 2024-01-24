@@ -119,6 +119,18 @@ void	Client::parseMsg(char *buffer)
 	{
 		getServer()->checkChannel(this, command.substr(5, command.size() - 6));
 	}
+	if (command.substr(0,7) == "PRIVMSG")
+	{
+		char* commandbis = &command[8];
+		std::string target = strtok(commandbis, " ");
+		if (target[0] == '#'){
+			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+				if ((*it)->getName() == target){
+					(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
+				}
+			}
+		}
+	}
 }
 
 

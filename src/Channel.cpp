@@ -20,6 +20,8 @@ void Channel::join(Client* client){
         std::string topic = RPL_TOPIC(client->getNick(), this->getName(), this->getTopic());
         send(client->getFd(), topic.c_str(), topic.size(), 0);
     }
+    _clients.push_back(client);
+    client->getChan().push_back(this);
     std::string names;
     for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
         names += (*it)->getNick() + " ";
@@ -28,7 +30,28 @@ void Channel::join(Client* client){
     send(client->getFd(), userlist.c_str(), userlist.size(), 0);
     std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
     send(client->getFd(), endofnames.c_str(), endofnames.size(), 0);
-    _clients.push_back(client);
+
 	std::cout << join << userlist << endofnames << std::endl;
     //Need to make more functions to send /PRIVMSGS to other clients in the channel, set Topic with /TOPIC
+}
+
+void	Channel::update(Client *client){
+	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
+    	std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end() - 1; it++){
+		send((*it)->getFd(), join.c_str(), join.size(), 0);
+		std::cout << (*it)->getFd() << ": updated with " << join;
+	}
+    	
+}
+
+void	Channel::sendMsg(Client *client, std::string target, std::string msg){
+	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
+    	std::string fullmsg = ":" + prefix + " PRIVMSG " + target + " :" + msg;
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+		if (client->getFd() != (*it)->getFd()){
+			send((*it)->getFd(), fullmsg.c_str(), fullmsg.size(), 0);
+			std::cout << (*it)->getFd() << ": updated with " << fullmsg;
+		}
+	}
 }

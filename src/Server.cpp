@@ -152,6 +152,7 @@ void	Server::checkChannel(Client *client, std::string buffer){
 		//Need to RPL to join chan + topic if any + client list
 		//Need to add client to vector of channel
 		_chanMap[buffer]->join(client);
+		_chanMap[buffer]->update(client);
 		//std::cout << buffer << "pipou\n";
 	}
 	else{

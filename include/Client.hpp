@@ -28,6 +28,7 @@ class Client{
 		std::string getHost() const {return _hostname;}
 		std::string getFullName() const {return _fullName;}
 		std::string getCommand() const {return _command;}
+		std::vector<Channel*> &getChan()  {return _chan;}
 
 		//SETTERS
 		void	setNego(const int nego){this->_negoCount = nego;}
