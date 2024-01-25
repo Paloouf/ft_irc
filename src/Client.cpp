@@ -51,6 +51,7 @@ void	Client::parseBuffer(char * buffer)
 		parseMsg(buffer);
 }
 
+
 void	Client::parseNego(char *buffer)
 {
 	std::string command = buffer;
@@ -94,7 +95,6 @@ void	Client::parseNego(char *buffer)
 		{
 			char* commandbis = &command[5];
 			setUser(strtok(commandbis, " "));
-			std::cout << getUser() << " poueeeeeeeeeeeettt\n";
 			setFullName(command.substr(command.find(":") + 1));
 			sendWelcome();
 			setNego(4);
@@ -105,20 +105,26 @@ void	Client::parseNego(char *buffer)
 	resetBuffer();
 }
 
+
 void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
 	std::cout << "MSG:" << command << std::endl;
-	if (command.substr(0,4) == "PING")
+
+	if (command.size() > 4 && command.substr(0,4) == "PING")
 	{	
+		std::cout << "Getting Ping request from client " << getFd() << std::endl;
 		std::string pong = "PONG " + command.substr(5) + "\n";
-		std::cout << pong;
+		std::cout << "Responding to ping request from client " << getFd() << " with message " << pong << std::endl;
 		send(getFd(), pong.c_str(), pong.size(), 0);
 	}
 	if (command.size() > 4 && command.substr(0,4) == "JOIN")
 	{
-		getServer()->checkChannel(this, command.substr(5, command.size() - 6));
+    getServer()->checkChannel(this, command.substr(5, command.size() - 6));
 	}
+	if (command.size() > 3 && command.substr(0,3) == "WHO")
+		getServer()->whoReply(this, buffer);
+  }
 	if (command.substr(0,7) == "PRIVMSG")
 	{
 		char* commandbis = &command[8];
@@ -133,6 +139,11 @@ void	Client::parseMsg(char *buffer)
 	}
 }
 
+std::string	Client::getFirstChannel() const
+{
+	if(_chan.empty())
+		return ("*");
+	return (_chan[0]->getName());
 
 void	Client::sendWelcome()
 {

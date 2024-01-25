@@ -55,3 +55,4 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 		}
 	}
 }
+
