@@ -177,6 +177,7 @@ void	Server::deleteClient(Client* client)
 		ite->second->deleteUser(client);
 		if ((*ite->second).getClient().empty())
 		{
+			delete ite->second;
 			_chanMap.erase(ite);
 			ite = _chanMap.begin();
 		}
