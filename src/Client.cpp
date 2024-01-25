@@ -120,11 +120,11 @@ void	Client::parseMsg(char *buffer)
 	}
 	if (command.size() > 4 && command.substr(0,4) == "JOIN")
 	{
-    getServer()->checkChannel(this, command.substr(5, command.size() - 6));
+   		 getServer()->checkChannel(this, command.substr(5, command.size() - 6));
 	}
 	if (command.size() > 3 && command.substr(0,3) == "WHO")
 		getServer()->whoReply(this, buffer);
-  }
+  
 	if (command.substr(0,7) == "PRIVMSG")
 	{
 		char* commandbis = &command[8];
@@ -144,6 +144,7 @@ std::string	Client::getFirstChannel() const
 	if(_chan.empty())
 		return ("*");
 	return (_chan[0]->getName());
+}
 
 void	Client::sendWelcome()
 {

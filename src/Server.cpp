@@ -58,6 +58,7 @@ void	Server::listening(){
 	createFd();
 	while (1)
 		waitInput();
+}
 
 //DATA REPLYING//
 
