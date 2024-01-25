@@ -176,12 +176,18 @@ void	Server::replyChannel(Client* client, char* buffer)
 
 void	Server::replyUser(Client* client, char* buffer)
 {
+	buffer[strlen(buffer) - 1] = '\0';
+	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
 	std::string	message;
 	std::string name = buffer;
-	std::vector<Client*>::iterator it = _clients.begin();
-	while(it->getUser() != name)
-		it++;
-	
-	message = RPL_WHOREPLY(client->getHostname(), client->getFirstChannel(), client->getUser(), client->getHostname(), "EasyRC.gg", client->getNick(), client->getFullName());
-	send(client->getFd(), message.c_str(), message.size(), 0);
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end();it++)
+	{
+		if ((*it)->getNick().find(buffer) != std::string::npos)
+		{
+			message = RPL_WHOREPLY((*it)->getHostname(), (*it)->getFirstChannel(), (*it)->getUser(), (*it)->getHostname(), "EasyRC.gg", (*it)->getNick(), (*it)->getFullName());
+			std::cout << "Responding to client " << client->getFd() << " with message " << message;
+			send(client->getFd(), message.c_str(), message.size(), 0);
+		}
+	}
+	std::cout << std::endl;
 }

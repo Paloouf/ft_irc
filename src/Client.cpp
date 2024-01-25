@@ -94,7 +94,8 @@ void	Client::parseNego(char *buffer)
 		}
 		else if (command.size() > 4 && command.substr(0,4) == "USER" && getNego() == 3)
 		{
-			setUser(strtok(command.substr(5), ' '));
+			char* commandbis = &command[5];
+			setUser(strtok(commandbis, " "));
 			setFullName(command.substr(command.find(":") + 1));
 			sendWelcome();
 			setNego(4);
@@ -128,7 +129,7 @@ void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
 	std::cout << "MSG:" << command << std::endl;
-	if (command.size > 4 && command.substr(0,4) == "PING")
+	if (command.size() > 4 && command.substr(0,4) == "PING")
 	{	
 		std::cout << "Getting Ping request from client " << getFd() << std::endl;
 		std::string pong = "PONG " + command.substr(5) + "\n";
@@ -139,15 +140,15 @@ void	Client::parseMsg(char *buffer)
 	{
 		getServer()->checkChannel(this, command);
 	}
-	if (command.size(0) > 3 && command.substr(0,3) == "WHO")
+	if (command.size() > 3 && command.substr(0,3) == "WHO")
 		getServer()->whoReply(this, buffer);
 }
 
 //GETTER//
 
-void	Client::getFirstChannel()
+std::string	Client::getFirstChannel() const
 {
 	if(_chan.empty())
 		return ("*");
-	return (chan[0]->getName());
+	return (_chan[0]->getName());
 }
