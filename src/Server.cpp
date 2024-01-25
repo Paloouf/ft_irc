@@ -170,8 +170,24 @@ void	Server::whoReply(Client* client, char* buffer)
 
 void	Server::replyChannel(Client* client, char* buffer)
 {
-	(void)client;
-	std::cout << buffer;
+	buffer[strlen(buffer) - 1] = '\0';
+	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
+	std::string	message;
+	for(std::map<std::string,Channel*>::iterator it = _chanMap.begin(); it != _chanMap.end(); it++)
+	{
+		if((*it).second->getName().find(buffer) != std::string::npos)
+		{
+			for(std::vector<Client*>::iterator itt = it->second->getClient().begin(); itt != it->second->getClient().end(); itt++)
+			{
+				message = RPL_WHOREPLY(client->getHostname(), (*it).second->getName(), (*itt)->getUser(), (*itt)->getHostname(), "EasyRC.gg", (*itt)->getNick(), (*itt)->getFullName());
+				std::cout << "Responding to client " << client->getFd() << " with message " << message;
+				send(client->getFd(), message.c_str(), message.size(), 0);
+			}
+		}
+	}
+	message = RPL_ENDOFWHO(client->getHostname(), buffer);
+	std::cout << "Responding to client " << client->getFd() << " with message " << message;
+	send(client->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::replyUser(Client* client, char* buffer)
@@ -179,15 +195,16 @@ void	Server::replyUser(Client* client, char* buffer)
 	buffer[strlen(buffer) - 1] = '\0';
 	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
 	std::string	message;
-	std::string name = buffer;
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end();it++)
 	{
 		if ((*it)->getNick().find(buffer) != std::string::npos)
 		{
-			message = RPL_WHOREPLY((*it)->getHostname(), (*it)->getFirstChannel(), (*it)->getUser(), (*it)->getHostname(), "EasyRC.gg", (*it)->getNick(), (*it)->getFullName());
+			message = RPL_WHOREPLY(client->getHostname(), (*it)->getFirstChannel(), (*it)->getUser(), (*it)->getHostname(), "EasyRC.gg", (*it)->getNick(), (*it)->getFullName());
 			std::cout << "Responding to client " << client->getFd() << " with message " << message;
 			send(client->getFd(), message.c_str(), message.size(), 0);
 		}
 	}
-	std::cout << std::endl;
+	message = RPL_ENDOFWHO(client->getHostname(), buffer);
+	std::cout << "Responding to client " << client->getFd() << " with message " << message;
+	send(client->getFd(), message.c_str(), message.size(), 0);
 }
