@@ -2,8 +2,8 @@
 
 Client::Client(Server *server, int fd, std::string hostname, int port) :_server(server), _fd(fd), _port(port),_hostname(hostname){
 	std::cout << &_server << "Test client, fd: " << this->getFd() << ", hostname: " << this->getHostname() << std::flush;
-	std::cout << ", port: " << this->getPort() << std::endl;
-	this->resetBuffer();
+	std::cout << ", port: " << this->getPort() << std::endl << std::endl;
+	this->resetBuffer();	
 	_negoCount = 0;
 }
 
@@ -30,28 +30,42 @@ void	Client::resetBuffer()
 
 void	Client::parseBuffer(char * buffer)
 {
-	if (_negoCount < 5)
-		parseNego(buffer);
+	if (_negoCount < 4)
+	{
+		try
+			{parseNego(buffer);}
+		catch (Server::wrongPassword& error)
+			{
+				resetBuffer();
+				_server->deleteClient(this);
+				std::cerr << error.what() << std::endl;
+			}
+		catch (Server::wrongArgument& error)
+			{
+				resetBuffer();
+				_server->deleteClient(this);
+				std::cerr << error.what() << std::endl;
+			}
+	}
 	else
 		parseMsg(buffer);
 }
 
+
 void	Client::parseNego(char *buffer)
 {
 	std::string command = buffer;
-	std::cout << command << std::endl;
 	addBuffer(buffer);
-	std::cout << "here" << std::endl;
 	std::stringstream 	sBuff(getCommand());
 	std::string			message;
 	while (getline(sBuff, command))
 	{
-		std::cerr << "Negotiation step : Message from client " << getFd() << " : <" << buffer << ">" <<std::endl;
+		std::cerr << "Negotiation step : Message from client " << getFd() << " : " << buffer;
 		if (command.size() > 3 && command.substr(0,3) == "CAP" && getNego() == 0)
 		{
 			message = "CAP * LS :\n";
 			send(getFd(), message.c_str(), message.size(), 0);
-			std::cout << "Responding with message <" << message << "> to client " << getFd() << std::endl << std::endl;
+			std::cout << "Responding to client " << getFd() << " with message " << message;
 			setNego(1);
 		}
 		else if (command.size() > 4 && command.substr(0,4) == "PASS" && getNego() == 1)
@@ -60,72 +74,91 @@ void	Client::parseNego(char *buffer)
 			if (!command[0])
 			{
 				message = ERR_NEEDMOREPARAMS(getHostname(), "PASS");
-				std::cout << "Responding with message <" << message << "> to client " << getFd() << std::endl << std::endl;
+				std::cout << "Responding to client " << getFd() << " with message " << message;
 				send(getFd(), message.c_str(), message.size(), 0);
 			}
 			if (command != "PASS :" + _server->getPassword())
 			{
 				message = ERR_PASSWDMISMATCH(getHostname());
-				std::cout << "Responding with message <" << message << "> to client " << getFd() << std::endl << std::endl;
+				std::cout << "Responding to client " << getFd() << " with message " << message ;
 				send(getFd(), message.c_str(), message.size(), 0);
 				throw Server::wrongPassword();
 			}
-			std::cout << "here" << std::endl;
 			setNego(2);
 		}
-		else if (command.substr(0,4) == "NICK")
+		else if (command.size() > 4 && command.substr(0,4) == "NICK" && getNego() == 2) 
 		{
 			setNick(command.substr(5));
+			setNego(3);
 		}
-		if (command.substr(0,4) == "USER")
+		else if (command.size() > 4 && command.substr(0,4) == "USER" && getNego() == 3)
 		{
-			setUser(command.substr(5));
+			char* commandbis = &command[5];
+			setUser(strtok(commandbis, " "));
 			setFullName(command.substr(command.find(":") + 1));
 			sendWelcome();
-			_negoCount = 5;
+			setNego(4);
 		}
-
-
+		else
+			throw Server::wrongArgument();
 	}
 	resetBuffer();
 }
+
 
 void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
 	std::cout << "MSG:" << command << std::endl;
-	if (command.substr(0,4) == "PING")
-	{
+
+	if (command.size() > 4 && command.substr(0,4) == "PING")
+	{	
+		std::cout << "Getting Ping request from client " << getFd() << std::endl;
 		std::string pong = "PONG " + command.substr(5) + "\n";
-		std::cout << pong;
+		std::cout << "Responding to ping request from client " << getFd() << " with message " << pong << std::endl;
 		send(getFd(), pong.c_str(), pong.size(), 0);
 	}
-	if (command.size() > 6 && command.substr(0,4) == "JOIN" && command.substr(5,6) == " #")
+	if (command.size() > 4 && command.substr(0,4) == "JOIN")
 	{
-		std::string nameChan = command.substr(command.find("#") + 1);
-		std::map<std::string, Channel*>::iterator		it = _server->getChanMap()->find(nameChan);
-		if (it != _server->getChanMap()->end())
-		{
-			_chan.push_back(it->second);
-		}
-		else
-		{
-			_chan.push_back(_server->createChan(nameChan, this));
-			std::cout << "channel: " << nameChan << " was created by " << getFullName() << " at " << _server->getDate() << std::endl;
+   		 getServer()->checkChannel(this, command.substr(5, command.size() - 6));
+	}
+	if (command.size() > 3 && command.substr(0,3) == "WHO")
+		getServer()->whoReply(this, buffer);
+  
+	if (command.substr(0,7) == "PRIVMSG")
+	{
+		char* commandbis = &command[8];
+		std::string target = strtok(commandbis, " ");
+		if (target[0] == '#'){
+			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+				if ((*it)->getName() == target){
+					(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
+				}
+			}
 		}
 	}
 }
 
+std::string	Client::getFirstChannel() const
+{
+	if(_chan.empty())
+		return ("*");
+	return (_chan[0]->getName());
+}
 
 void	Client::sendWelcome()
 {
 	std::string message = RPL_WELCOME(getNick(), getFullName());
 	send(getFd(), message.c_str(), message.size(), 0);
+	std::cout << "Responding to client " << getFd() << " with message " << message;
 	message = RPL_YOURHOST(getNick());
 	send(getFd(), message.c_str(), message.size(), 0);
+	std::cout << "Responding to client " << getFd() << " with message " << message;
 	message = RPL_CREATED(getNick(), _server->getDate());
 	send(getFd(), message.c_str(), message.size(), 0);
+	std::cout << "Responding to client " << getFd() << " with message " << message;
 	message = RPL_MYINFO(getNick());
 	send(getFd(), message.c_str(), message.size(), 0);
-	std::cout << "nique: " << getNick() << std::endl;
+	std::cout << "Responding to client " << getFd() << " with message " << message;
+	std::cout << "Successfully registered client " << getHostname() << std::endl << std::endl;
 }

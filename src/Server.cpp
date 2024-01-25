@@ -2,7 +2,8 @@
 
 //SERVER LAUNCHING//
 
-Server::Server(std::string port, std::string password): _port(port), _password(password)
+
+Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL)
 {
 	setTime();
 	std::cout << "Server active" << std::endl;
@@ -32,17 +33,9 @@ void		Server::checkInput()
 		throw Server::portTooHigh();
 }
 
-Server::~Server(){
 
-	std::cout << "Server dead\n";
-	std::map<std::string, Channel*>::iterator		it = _chanMap.begin();
-	while (it != _chanMap.end())
-	{
-		delete it->second;
-		it++;
-	}
-	_chanMap.clear();
-}
+Server::~Server(){
+	std::cout << "Server dead\n";}
 
 //SERVER LISTENING//
 
@@ -61,10 +54,62 @@ void	Server::listening(){
 
 	bind(_sockfd, (struct sockaddr*)&address, sizeof(address));
 	listen(_sockfd, 8);
-	std::cout << "Waiting for connection...\n";
+	std::cout << "Waiting for connection...\n\n";
 	createFd();
 	while (1)
 		waitInput();
+}
+
+//DATA REPLYING//
+
+void	Server::whoReply(Client* client, char* buffer)
+{
+	buffer += 4;
+	if(buffer[0] == '#')
+		replyChannel(client, buffer);
+	else
+		replyUser(client, buffer);
+}
+
+void	Server::replyChannel(Client* client, char* buffer)
+{
+	buffer[strlen(buffer) - 1] = '\0';
+	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
+	std::string	message;
+	for(std::map<std::string,Channel*>::iterator it = _chanMap.begin(); it != _chanMap.end(); it++)
+	{
+		if((*it).second->getName().find(buffer) != std::string::npos)
+		{
+			for(std::vector<Client*>::iterator itt = it->second->getClient().begin(); itt != it->second->getClient().end(); itt++)
+			{
+				message = RPL_WHOREPLY(client->getHostname(), (*it).second->getName(), (*itt)->getUser(), (*itt)->getHostname(), "EasyRC.gg", (*itt)->getNick(), (*itt)->getFullName());
+				std::cout << "Responding to client " << client->getFd() << " with message " << message;
+				send(client->getFd(), message.c_str(), message.size(), 0);
+			}
+		}
+	}
+	message = RPL_ENDOFWHO(client->getHostname(), buffer);
+	std::cout << "Responding to client " << client->getFd() << " with message " << message;
+	send(client->getFd(), message.c_str(), message.size(), 0);
+}
+
+void	Server::replyUser(Client* client, char* buffer)
+{
+	buffer[strlen(buffer) - 1] = '\0';
+	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
+	std::string	message;
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end();it++)
+	{
+		if ((*it)->getNick().find(buffer) != std::string::npos)
+		{
+			message = RPL_WHOREPLY(client->getHostname(), (*it)->getFirstChannel(), (*it)->getUser(), (*it)->getHostname(), "EasyRC.gg", (*it)->getNick(), (*it)->getFullName());
+			std::cout << "Responding to client " << client->getFd() << " with message " << message;
+			send(client->getFd(), message.c_str(), message.size(), 0);
+		}
+	}
+	message = RPL_ENDOFWHO(client->getHostname(), buffer);
+	std::cout << "Responding to client " << client->getFd() << " with message " << message;
+	send(client->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::waitInput(){
@@ -73,17 +118,14 @@ void	Server::waitInput(){
 		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
 	{
-		std::cout << "i dans le for: " << i << std::endl;
 		if (_clientsFd[i].revents != 0)
 		{
-			std::cout << "YO\n";
-			if (_clientsFd[i].fd == _sockfd)
+			if (_clientsFd[i].fd == _sockfd){
 				addClient();
-			else
-			{
-				std::cout << " c'est le else" << std::endl;
-				receiveData(this->_clients[i - 1]);
+				break;
 			}
+			else
+				receiveData(this->_clients[i - 1]);
 		}
 	}
 }
@@ -95,10 +137,8 @@ void	Server::createFd()
 	if (this->_clientsFd)
 		delete [] this->_clientsFd;
 	this->_clientsFd = new struct pollfd[_clients.size() + 1];
-
 	this->_clientsFd[0].fd = this->_sockfd;
 	this->_clientsFd[0].events = POLLIN;
-
 	for (unsigned long i = 0; i < this->_clients.size(); i++)
 	{
 		this->_clientsFd[i + 1].fd = this->_clients[i]->getFd();
@@ -128,12 +168,33 @@ void	Server::addClient()
 	}
 }
 
-Channel		*Server::createChan(std::string nameChan, Client* autor)
+void	Server::deleteClient(Client* client)
 {
-	Channel *newChan = new Channel(this, autor, nameChan);
-	_chanMap.insert(std::pair<std::string, Channel*>(nameChan, newChan));
-	return (newChan);
+	int i = 0;
+	std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
+	while (ite != _chanMap.end())
+	{
+		ite->second->deleteUser(client);
+		if ((*ite->second).getClient().empty())
+		{
+			_chanMap.erase(ite);
+			ite = _chanMap.begin();
+		}
+		ite++;
+	}
+	std::vector<Client*>::iterator it = _clients.begin();
+	i = 0;
+	while((*it)->getFd() != client->getFd())
+	{
+		it++;
+		i++;
+	}
+	_clients.erase(_clients.begin() + i);
+	close(client->getFd());
+	delete client;
+	createFd();
 }
+
 //DATA HANDLING//
 
 void	Server::receiveData(Client *client){
@@ -142,19 +203,29 @@ void	Server::receiveData(Client *client){
 	buffer[err] = '\0';
 	if (err == 0 && client->getCommand().size() == 0)
 	{
-		for(unsigned long i = 0; i < _clients.size(); i++)
-		{
-			if (_clients[i]->getFd() == client->getFd())
-				_clients.erase(_clients.begin() + i);
-		}
+		deleteClient(client);
 		std::cout << "client disconnected\n";
 	}
 	else
 		client->parseBuffer(buffer);
 }
 
+//CHANNEL CHECK//
 
-
+void	Server::checkChannel(Client *client, std::string buffer){
+	if (_chanMap.find(buffer) != _chanMap.end())
+	{
+		//Need to RPL to join chan + topic if any + client list
+		//Need to add client to vector of channel
+		_chanMap[buffer]->join(client);
+		_chanMap[buffer]->update(client);
+		//std::cout << buffer << "pipou\n";
+	}
+	else{
+		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
+		//Need to send RPL_channel created for Konversation to create a chan
+	}
+}
 
 
 

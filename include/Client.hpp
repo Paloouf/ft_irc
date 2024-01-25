@@ -22,10 +22,16 @@ class Client{
 		std::string const &	getHostname() const{return _hostname;}
 		int	getPort() const {return _port;}
 		int getNego() const {return _negoCount;}
+		Server*		getServer() {return _server;}
 		std::string getNick() const {return _nick;}
+		std::string getUser() const {return _user;}
 		std::string getHost() const {return _hostname;}
 		std::string getFullName() const {return _fullName;}
 		std::string getCommand() const {return _command;}
+
+    std::string getFirstChannel() const;
+		std::vector<Channel*> &getChan()  {return _chan;}
+
 
 		//SETTERS
 		void	setNego(const int nego){this->_negoCount = nego;}

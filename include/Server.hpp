@@ -22,6 +22,7 @@ class Server{
 		void	createFd();
 		void	waitInput();
 		void	addClient();
+
 		void	setTime();
 		void	receiveData(Client *client);
 		std::string	convertIP(const void *address);
@@ -31,12 +32,18 @@ class Server{
 		~Server();
 		Server(std::string port, std::string password);
 		void		checkInput();
+		void		deleteClient(Client* client);
+		void		checkChannel(Client* client, std::string buffer);
+
+		void		whoReply(Client* client, char* buffer);
+		void		replyChannel(Client* client, char* buffer);
+		void		replyUser(Client* client, char* buffer);
+
 		std::string getDate(){return _date;}
 		std::string getPassword(){return _password;}
 		std::string getPort(){return _port;}
-		std::map<std::string, Channel*> *getChanMap() {return &_chanMap;}
-		Channel		*createChan(std::string nameChan, Client* autor);
-
+		
+		
 
 		class	portNonDigit : public std::exception
 		{
@@ -62,4 +69,11 @@ class Server{
 				virtual const char* what() const throw()
 				{return ("Missing Arguments, deleting the client");}
 		};
+		class	wrongArgument : public std::exception
+		{
+			public:
+				virtual const char* what() const throw()
+				{return ("Argument doesn't match negotiation step");}
+		};
+
 };
