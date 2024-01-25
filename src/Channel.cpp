@@ -3,9 +3,12 @@
 Channel::Channel(Server *server, std::string name, Client* client) :_server(server), _name(name), _creator(client){
     std::cout << "New Channel " << _name << " created by client[" << _creator->getFd() << "]\n";
     setTopic("");
+    _admins.push_back(client);
     this->join(client);
+    
 }
 Channel::~Channel(){}
+
 
 void Channel::join(Client* client){
     std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
@@ -24,6 +27,12 @@ void Channel::join(Client* client){
     client->getChan().push_back(this);
     std::string names;
     for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+	for(std::vector<Client*>::iterator itt = _admins.begin(); itt != _admins.end(); itt++){
+		if ((*itt)->getFd() == (*it)->getFd()){
+			names += "@";
+			//it++;
+		}
+	}
         names += (*it)->getNick() + " ";
     }
     std::string userlist = RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str());
@@ -55,3 +64,4 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 		}
 	}
 }
+

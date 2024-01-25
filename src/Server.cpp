@@ -2,6 +2,7 @@
 
 //SERVER LAUNCHING//
 
+
 Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL) 
 {
 	setTime();
@@ -32,6 +33,7 @@ void		Server::checkInput()
 		throw Server::portTooHigh();
 }
 
+
 Server::~Server(){
 	std::cout << "Server dead\n";}
 
@@ -56,6 +58,58 @@ void	Server::listening(){
 	createFd();
 	while (1)
 		waitInput();
+}
+
+//DATA REPLYING//
+
+void	Server::whoReply(Client* client, char* buffer)
+{
+	buffer += 4;
+	if(buffer[0] == '#')
+		replyChannel(client, buffer);
+	else
+		replyUser(client, buffer);
+}
+
+void	Server::replyChannel(Client* client, char* buffer)
+{
+	buffer[strlen(buffer) - 1] = '\0';
+	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
+	std::string	message;
+	for(std::map<std::string,Channel*>::iterator it = _chanMap.begin(); it != _chanMap.end(); it++)
+	{
+		if((*it).second->getName().find(buffer) != std::string::npos)
+		{
+			for(std::vector<Client*>::iterator itt = it->second->getClient().begin(); itt != it->second->getClient().end(); itt++)
+			{
+				message = RPL_WHOREPLY(client->getHostname(), (*it).second->getName(), (*itt)->getUser(), (*itt)->getHostname(), "EasyRC.gg", (*itt)->getNick(), (*itt)->getFullName());
+				std::cout << "Responding to client " << client->getFd() << " with message " << message;
+				send(client->getFd(), message.c_str(), message.size(), 0);
+			}
+		}
+	}
+	message = RPL_ENDOFWHO(client->getHostname(), buffer);
+	std::cout << "Responding to client " << client->getFd() << " with message " << message;
+	send(client->getFd(), message.c_str(), message.size(), 0);
+}
+
+void	Server::replyUser(Client* client, char* buffer)
+{
+	buffer[strlen(buffer) - 1] = '\0';
+	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
+	std::string	message;
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end();it++)
+	{
+		if ((*it)->getNick().find(buffer) != std::string::npos)
+		{
+			message = RPL_WHOREPLY(client->getHostname(), (*it)->getFirstChannel(), (*it)->getUser(), (*it)->getHostname(), "EasyRC.gg", (*it)->getNick(), (*it)->getFullName());
+			std::cout << "Responding to client " << client->getFd() << " with message " << message;
+			send(client->getFd(), message.c_str(), message.size(), 0);
+		}
+	}
+	message = RPL_ENDOFWHO(client->getHostname(), buffer);
+	std::cout << "Responding to client " << client->getFd() << " with message " << message;
+	send(client->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::waitInput(){
@@ -134,6 +188,11 @@ void	Server::deleteClient(Client* client)
 void	Server::receiveData(Client *client){
 	char	buffer[8192];
 	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+	if (buffer[err - 1] != '\n')
+	{
+		client->addBuffer(buffer);
+		return;
+	}
 	buffer[err] = '\0';
 	if (err == 0 && client->getCommand().size() == 0)
 	{
