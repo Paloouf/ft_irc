@@ -3,7 +3,7 @@
 Channel::Channel(Server *server, std::string name, Client* client) :_server(server), _name(name), _creator(client){
     std::cout << "New Channel " << _name << " created by client[" << _creator->getFd() << "]\n";
     setTopic("");
-    _admins.push_back(client);
+	_admins.push_back(client);
     this->join(client);
 }
 Channel::~Channel(){}
@@ -38,7 +38,7 @@ void Channel::join(Client* client){
 
 void	Channel::update(Client *client){
 	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-    	std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
+	std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end() - 1; it++){
 		send((*it)->getFd(), join.c_str(), join.size(), 0);
 		std::cout << (*it)->getFd() << ": updated with " << join;
@@ -75,6 +75,11 @@ void	Channel::deleteUser(Client *client)
 			_clients.erase(_clients.begin() + i);
 			i = 0;
 		}
+	}
+	if (_clients.size() > 0 && _admins.size() == 0)
+	{
+		_admins.push_back(_clients[0]);
+		//need to add sendmsg fonction for tell at all client the new admin in chan
 	}
 }
 
