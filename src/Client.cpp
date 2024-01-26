@@ -138,7 +138,15 @@ void	Client::parseMsg(char *buffer)
 		}
 	}
 	if(command.substr(0,4) == "MODE"){
-		std::cout << "coucou\n";
+		char* commandbis = &command[5];
+		std::string target = strtok(commandbis, " ");
+		if (target[0] == '#'){
+			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+				if ((*it)->getName() == target){
+					(*it)->parseMode(this, target, command.substr(5 + target.size()));
+				}
+			}
+		}
 	}
 }
 

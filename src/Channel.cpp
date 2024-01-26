@@ -5,7 +5,10 @@ Channel::Channel(Server *server, std::string name, Client* client) :_server(serv
     setTopic("");
     _admins.push_back(client);
     this->join(client);
-    
+    _l = false;
+    _k = false;
+    _i = false;
+    _t = false;
 }
 Channel::~Channel(){}
 
@@ -65,3 +68,106 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 	}
 }
 
+void	Channel::sendMode(Client *client, std::string target, std::string mode, std::string msg){
+	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
+    	std::string fullmsg = ":" + prefix + " MODE " + target + " " + mode + " " + msg;
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+			send((*it)->getFd(), fullmsg.c_str(), fullmsg.size(), 0);
+			std::cout << (*it)->getFd() << ": updated with " << fullmsg;
+		
+	}
+}
+
+void    Channel::parseMode(Client *client, std::string target, std::string buff){
+    std::stringstream smodes(buff);
+    std::string modes, param;
+    smodes >> modes >> param;
+    if (modes.find("-") != std::string::npos){
+        //remove modes
+        size_t i = modes.find("-");
+        std::string del;
+        i++;
+        while (i != modes.find("+") && i < modes.size()){
+            del += modes[i];
+            i++;
+        }
+        removeMode(client, del, param);
+    }
+    if (modes.find("+") != std::string::npos){
+        //add modes
+        size_t i = modes.find("+");
+        std::cout << "i: " << i << ", size: " << modes.size() << std::endl;
+        std::string add;
+        i++;
+        while (i != modes.find("-") && i < modes.size()){
+            add += modes[i];
+            i++;
+        }
+        addMode(client, add, param);
+        std::cout << target << " miaou " << client->getFd() << std::endl;
+    }
+}
+
+void    Channel::removeMode(Client *client,std::string del, std::string param){
+    std::cout << del;
+    bool    isAdmin = false;
+    for (std::vector<Client*>::iterator it = _admins.begin(); it != _admins.end(); it++){
+        if ((*it)->getFd() == client->getFd())
+            isAdmin = true;
+    }
+    if (isAdmin){
+        if (del.find("i") != std::string::npos)
+            _i = false;
+        if (del.find("t") != std::string::npos)
+            _t = false;
+        if (del.find("k") != std::string::npos)
+            _k = false;
+        if (del.find("o") != std::string::npos){
+            std::cout << "Removed operator privileges for : " << param;
+        }
+        if (del.find("l") != std::string::npos)
+            _l = false;
+    }
+}
+
+bool    Channel::isAdmin(Client* client){
+    bool    isAdmin = false;
+    for (std::vector<Client*>::iterator it = _admins.begin(); it != _admins.end(); it++){
+        if ((*it)->getFd() == client->getFd())
+            isAdmin = true;
+    }
+    return (isAdmin);
+}
+
+void    Channel::addMode(Client *client,std::string add, std::string param){
+    std::cout << add << param;
+    if (this->isAdmin(client)){
+        if (add.find("i") != std::string::npos)
+            _i = true;
+        if (add.find("t") != std::string::npos)
+            _t = true;
+        if (add.find("k") != std::string::npos){
+            std::cout << "New pass for " << this->getName() << " is " << param << std::endl;
+            _k = true;
+            setPass(param);
+        }
+        if (add.find("o") != std::string::npos){
+            std::cout << "Added operator privileges for : " << param;
+            std::string msg = param + "\n";
+            for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+                if ((*it)->getNick() == param){
+                    if (!this->isAdmin((*it))){
+                        _admins.push_back((*it));
+                        sendMode(client, getName(), "+o", msg);
+                    }
+                    else
+                        std::cout << (*it)->getNick() << " is already admin\n";
+                }
+                else
+                    std::cout << param << " doesn't match any username\n";
+            }  
+        }
+        if (add.find("l") != std::string::npos)
+            _l = true;
+    }
+}
