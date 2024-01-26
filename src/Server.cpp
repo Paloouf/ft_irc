@@ -3,7 +3,6 @@
 //SERVER LAUNCHING//
 
 
-
 Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL) 
 {
 	setTime();
@@ -209,6 +208,11 @@ void	Server::deleteClient(Client* client)
 void	Server::receiveData(Client *client){
 	char	buffer[8192];
 	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+	if (buffer[err - 1] != '\n')
+	{
+		client->addBuffer(buffer);
+		return;
+	}
 	buffer[err] = '\0';
 	if (err == 0 && client->getCommand().size() == 0)
 	{
