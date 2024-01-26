@@ -3,6 +3,7 @@
 //SERVER LAUNCHING//
 
 
+
 Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL) 
 {
 	setTime();
@@ -170,8 +171,22 @@ void	Server::addClient()
 
 void	Server::deleteClient(Client* client)
 {
-	std::vector<Client*>::iterator it = _clients.begin();
+
 	int i = 0;
+	std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
+	while (ite != _chanMap.end())
+	{
+		ite->second->deleteUser(client);
+		if ((*ite->second).getClient().empty())
+		{
+			delete ite->second;
+			_chanMap.erase(ite);
+			ite = _chanMap.begin();
+		}
+		ite++;
+	}
+	std::vector<Client*>::iterator it = _clients.begin();
+	i = 0;
 	while((*it)->getFd() != client->getFd())
 	{
 		it++;

@@ -3,6 +3,7 @@
 Channel::Channel(Server *server, std::string name, Client* client) :_server(server), _name(name), _creator(client){
     std::cout << "New Channel " << _name << " created by client[" << _creator->getFd() << "]\n";
     setTopic("");
+    _admins.push_back(client);
     this->join(client);
 }
 Channel::~Channel(){}
@@ -42,7 +43,7 @@ void	Channel::update(Client *client){
 		send((*it)->getFd(), join.c_str(), join.size(), 0);
 		std::cout << (*it)->getFd() << ": updated with " << join;
 	}
-    	
+
 }
 
 void	Channel::sendMsg(Client *client, std::string target, std::string msg){
@@ -52,6 +53,27 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 		if (client->getFd() != (*it)->getFd()){
 			send((*it)->getFd(), fullmsg.c_str(), fullmsg.size(), 0);
 			std::cout << (*it)->getFd() << ": updated with " << fullmsg;
+		}
+	}
+}
+
+
+void	Channel::deleteUser(Client *client)
+{
+	for (unsigned i = 0; i < _admins.size(); i++)
+	{
+		if (_admins[i]->getFd() == client->getFd())
+		{
+			_admins.erase(_admins.begin() + i);
+			i = 0;
+		}
+	}
+	for (unsigned i = 0; i < _clients.size(); i++)
+	{
+		if (_clients[i]->getFd() == client->getFd())
+		{
+			_clients.erase(_clients.begin() + i);
+			i = 0;
 		}
 	}
 }
