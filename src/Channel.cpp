@@ -3,8 +3,8 @@
 Channel::Channel(Server *server, std::string name, Client* client) :_server(server), _name(name), _creator(client){
     std::cout << "New Channel " << _name << " created by client[" << _creator->getFd() << "]\n";
     setTopic("");
+    _admins.push_back(client);
     this->join(client);
-	_admins.push_back(client);
 }
 Channel::~Channel(){}
 
@@ -57,6 +57,7 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 	}
 }
 
+
 void	Channel::deleteUser(Client *client)
 {
 	for (unsigned i = 0; i < _admins.size(); i++)
@@ -76,3 +77,4 @@ void	Channel::deleteUser(Client *client)
 		}
 	}
 }
+

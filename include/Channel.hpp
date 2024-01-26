@@ -21,6 +21,7 @@ class Channel{
 		void	setTopic(std::string topic) {_topic = topic;}
 		void	deleteUser(Client *client);
 
+
 	private:
 		Channel();
 		Server*			_server;
@@ -31,4 +32,6 @@ class Channel{
 		Client*			_creator;
 		std::vector<Client*> 	_admins;
 		std::vector<Client*> 	_clients;
+
 };
+

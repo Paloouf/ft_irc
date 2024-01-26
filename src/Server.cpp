@@ -3,7 +3,8 @@
 //SERVER LAUNCHING//
 
 
-Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL)
+
+Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL) 
 {
 	setTime();
 	std::cout << "Server active" << std::endl;
@@ -170,6 +171,7 @@ void	Server::addClient()
 
 void	Server::deleteClient(Client* client)
 {
+
 	int i = 0;
 	std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
 	while (ite != _chanMap.end())
