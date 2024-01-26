@@ -69,7 +69,6 @@ void	Client::parseBuffer(char * buffer)
 		parseMsg(buffer);
 }
 
-//BEFORE NEGOTIATION//
 
 void	Client::parseNego(char *buffer)
 {
@@ -130,29 +129,12 @@ void	Client::parseNego(char *buffer)
 	resetBuffer();
 }
 
-void	Client::sendWelcome()
-{
-	std::string message = RPL_WELCOME(getNick(), getFullName());
-	send(getFd(), message.c_str(), message.size(), 0);
-	std::cout << "Responding to client " << getFd() << " with message " << message;
-	message = RPL_YOURHOST(getNick());
-	send(getFd(), message.c_str(), message.size(), 0);
-	std::cout << "Responding to client " << getFd() << " with message " << message;
-	message = RPL_CREATED(getNick(), _server->getDate());
-	send(getFd(), message.c_str(), message.size(), 0);
-	std::cout << "Responding to client " << getFd() << " with message " << message;
-	message = RPL_MYINFO(getNick());
-	send(getFd(), message.c_str(), message.size(), 0);
-	std::cout << "Responding to client " << getFd() << " with message " << message;
-	std::cout << "Successfully registered client " << getHostname() << std::endl << std::endl;
-}
-
-//AFTER NEGOTIATION//
 
 void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
 	std::cout << "MSG:" << command << std::endl;
+
 	if (command.size() > 4 && command.substr(0,4) == "PING")
 	{	
 		std::cout << "Getting Ping request from client " << getFd() << std::endl;
@@ -162,10 +144,11 @@ void	Client::parseMsg(char *buffer)
 	}
 	if (command.size() > 4 && command.substr(0,4) == "JOIN")
 	{
-		getServer()->checkChannel(this, command);
+    getServer()->checkChannel(this, command.substr(5, command.size() - 6));
 	}
 	if (command.size() > 3 && command.substr(0,3) == "WHO")
 		getServer()->whoReply(this, buffer);
+<<<<<<< HEAD
 	if (command.size() > 4 && command.substr(0,3) == "NICK")
 	{
 		if(checkNick(command.substr(5)) && checkDoubleNick(command.substr(5)))
@@ -175,16 +158,29 @@ void	Client::parseMsg(char *buffer)
 	{
 		if(checkDoubleUser(command.substr(5).c_str()))
 			setUser(command.substr(5));
+=======
+  }
+	if (command.substr(0,7) == "PRIVMSG")
+	{
+		char* commandbis = &command[8];
+		std::string target = strtok(commandbis, " ");
+		if (target[0] == '#'){
+			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+				if ((*it)->getName() == target){
+					(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
+				}
+			}
+		}
+>>>>>>> 1e54c5827d3f05fdb5c004ffab86770d365ed4d7
 	}
 }
-
-//GETTER//
 
 std::string	Client::getFirstChannel() const
 {
 	if(_chan.empty())
 		return ("*");
 	return (_chan[0]->getName());
+<<<<<<< HEAD
 }
 
 bool		Client::checkNick(std::string nick)
@@ -228,4 +224,22 @@ bool		Client::checkDoubleUser(const char* user)
 		}
 	}
 	return true;
+=======
+
+void	Client::sendWelcome()
+{
+	std::string message = RPL_WELCOME(getNick(), getFullName());
+	send(getFd(), message.c_str(), message.size(), 0);
+	std::cout << "Responding to client " << getFd() << " with message " << message;
+	message = RPL_YOURHOST(getNick());
+	send(getFd(), message.c_str(), message.size(), 0);
+	std::cout << "Responding to client " << getFd() << " with message " << message;
+	message = RPL_CREATED(getNick(), _server->getDate());
+	send(getFd(), message.c_str(), message.size(), 0);
+	std::cout << "Responding to client " << getFd() << " with message " << message;
+	message = RPL_MYINFO(getNick());
+	send(getFd(), message.c_str(), message.size(), 0);
+	std::cout << "Responding to client " << getFd() << " with message " << message;
+	std::cout << "Successfully registered client " << getHostname() << std::endl << std::endl;
+>>>>>>> 1e54c5827d3f05fdb5c004ffab86770d365ed4d7
 }

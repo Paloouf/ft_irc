@@ -22,6 +22,7 @@ class Server{
 		void	createFd();
 		void	waitInput();
 		void	addClient();
+
 		void	setTime();
 		void	receiveData(Client *client);
 		std::string	convertIP(const void *address);
@@ -30,6 +31,7 @@ class Server{
 	public:
 		~Server();
 		Server(std::string port, std::string password);
+<<<<<<< HEAD
 		void					checkInput();
 		void					deleteClient(Client* client);
 		void					checkChannel(Client* client, std::string buffer);
@@ -40,5 +42,51 @@ class Server{
 		std::string 			getPassword(){return _password;}
 		std::string 			getPort(){return _port;}
 		std::vector<Client*>	&getClient(){return _clients;}
+=======
+		void		checkInput();
+		void		deleteClient(Client* client);
+		void		checkChannel(Client* client, std::string buffer);
+
+		void		whoReply(Client* client, char* buffer);
+		void		replyChannel(Client* client, char* buffer);
+		void		replyUser(Client* client, char* buffer);
+
+		std::string getDate(){return _date;}
+		std::string getPassword(){return _password;}
+		std::string getPort(){return _port;}
+		
+		
+
+		class	portNonDigit : public std::exception
+		{
+			public:
+				virtual const char* what() const throw()
+				{return ("Port must be a only digits arguments");}
+		};
+		class	portTooHigh : public std::exception
+		{
+			public:
+				virtual const char* what() const throw()
+				{return ("Port must be below 64738");}
+		};
+		class	wrongPassword : public std::exception
+		{
+			public:
+				virtual const char* what() const throw()
+				{return ("Password doesn't match, deleting the client");}
+		};
+		class	missingArgument : public std::exception
+		{
+			public:
+				virtual const char* what() const throw()
+				{return ("Missing Arguments, deleting the client");}
+		};
+		class	wrongArgument : public std::exception
+		{
+			public:
+				virtual const char* what() const throw()
+				{return ("Argument doesn't match negotiation step");}
+		};
+>>>>>>> 1e54c5827d3f05fdb5c004ffab86770d365ed4d7
 
 };

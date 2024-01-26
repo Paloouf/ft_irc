@@ -2,7 +2,8 @@
 
 //SERVER LAUNCHING//
 
-Server::Server(std::string port, std::string password): _port(port), _password(password)
+
+Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL) 
 {
 	setTime();
 	std::cout << "Server active" << std::endl;
@@ -32,6 +33,7 @@ void		Server::checkInput()
 		throw Error::portTooHigh();
 }
 
+
 Server::~Server(){
 	std::cout << "Server dead\n";}
 
@@ -56,6 +58,57 @@ void	Server::listening(){
 	createFd();
 	while (1)
 		waitInput();
+
+//DATA REPLYING//
+
+void	Server::whoReply(Client* client, char* buffer)
+{
+	buffer += 4;
+	if(buffer[0] == '#')
+		replyChannel(client, buffer);
+	else
+		replyUser(client, buffer);
+}
+
+void	Server::replyChannel(Client* client, char* buffer)
+{
+	buffer[strlen(buffer) - 1] = '\0';
+	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
+	std::string	message;
+	for(std::map<std::string,Channel*>::iterator it = _chanMap.begin(); it != _chanMap.end(); it++)
+	{
+		if((*it).second->getName().find(buffer) != std::string::npos)
+		{
+			for(std::vector<Client*>::iterator itt = it->second->getClient().begin(); itt != it->second->getClient().end(); itt++)
+			{
+				message = RPL_WHOREPLY(client->getHostname(), (*it).second->getName(), (*itt)->getUser(), (*itt)->getHostname(), "EasyRC.gg", (*itt)->getNick(), (*itt)->getFullName());
+				std::cout << "Responding to client " << client->getFd() << " with message " << message;
+				send(client->getFd(), message.c_str(), message.size(), 0);
+			}
+		}
+	}
+	message = RPL_ENDOFWHO(client->getHostname(), buffer);
+	std::cout << "Responding to client " << client->getFd() << " with message " << message;
+	send(client->getFd(), message.c_str(), message.size(), 0);
+}
+
+void	Server::replyUser(Client* client, char* buffer)
+{
+	buffer[strlen(buffer) - 1] = '\0';
+	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
+	std::string	message;
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end();it++)
+	{
+		if ((*it)->getNick().find(buffer) != std::string::npos)
+		{
+			message = RPL_WHOREPLY(client->getHostname(), (*it)->getFirstChannel(), (*it)->getUser(), (*it)->getHostname(), "EasyRC.gg", (*it)->getNick(), (*it)->getFullName());
+			std::cout << "Responding to client " << client->getFd() << " with message " << message;
+			send(client->getFd(), message.c_str(), message.size(), 0);
+		}
+	}
+	message = RPL_ENDOFWHO(client->getHostname(), buffer);
+	std::cout << "Responding to client " << client->getFd() << " with message " << message;
+	send(client->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::waitInput(){
@@ -66,8 +119,10 @@ void	Server::waitInput(){
 	{
 		if (_clientsFd[i].revents != 0)
 		{
-			if (_clientsFd[i].fd == _sockfd)
+			if (_clientsFd[i].fd == _sockfd){
 				addClient();
+				break;
+			}
 			else
 				receiveData(this->_clients[i - 1]);
 		}
@@ -149,62 +204,15 @@ void	Server::checkChannel(Client *client, std::string buffer){
 	{
 		//Need to RPL to join chan + topic if any + client list
 		//Need to add client to vector of channel
-		std::cout << buffer << "pipou\n";
+		_chanMap[buffer]->join(client);
+		_chanMap[buffer]->update(client);
+		//std::cout << buffer << "pipou\n";
 	}
 	else{
-		_chanMap.insert(make_pair(buffer, new Channel(this, buffer.substr(5, buffer.size() - 6), client)));
+		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
 		//Need to send RPL_channel created for Konversation to create a chan
 	}
 }
 
-//DATA REPLYING//
 
-void	Server::whoReply(Client* client, char* buffer)
-{
-	buffer += 4;
-	if(buffer[0] == '#')
-		replyChannel(client, buffer);
-	else
-		replyUser(client, buffer);
-}
 
-void	Server::replyChannel(Client* client, char* buffer)
-{
-	buffer[strlen(buffer) - 1] = '\0';
-	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
-	std::string	message;
-	for(std::map<std::string,Channel*>::iterator it = _chanMap.begin(); it != _chanMap.end(); it++)
-	{
-		if((*it).second->getName().find(buffer) != std::string::npos)
-		{
-			for(std::vector<Client*>::iterator itt = it->second->getClient().begin(); itt != it->second->getClient().end(); itt++)
-			{
-				message = RPL_WHOREPLY(client->getHostname(), (*it).second->getName(), (*itt)->getUser(), (*itt)->getHostname(), "EasyRC.gg", (*itt)->getNick(), (*itt)->getFullName());
-				std::cout << "Responding to client " << client->getFd() << " with message " << message;
-				send(client->getFd(), message.c_str(), message.size(), 0);
-			}
-		}
-	}
-	message = RPL_ENDOFWHO(client->getHostname(), buffer);
-	std::cout << "Responding to client " << client->getFd() << " with message " << message;
-	send(client->getFd(), message.c_str(), message.size(), 0);
-}
-
-void	Server::replyUser(Client* client, char* buffer)
-{
-	buffer[strlen(buffer) - 1] = '\0';
-	std::cout << "Get WHO request from client " << client->getFd() << " requesting info on " << buffer << std::endl;
-	std::string	message;
-	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end();it++)
-	{
-		if ((*it)->getNick().find(buffer) != std::string::npos)
-		{
-			message = RPL_WHOREPLY(client->getHostname(), (*it)->getFirstChannel(), (*it)->getUser(), (*it)->getHostname(), "EasyRC.gg", (*it)->getNick(), (*it)->getFullName());
-			std::cout << "Responding to client " << client->getFd() << " with message " << message;
-			send(client->getFd(), message.c_str(), message.size(), 0);
-		}
-	}
-	message = RPL_ENDOFWHO(client->getHostname(), buffer);
-	std::cout << "Responding to client " << client->getFd() << " with message " << message;
-	send(client->getFd(), message.c_str(), message.size(), 0);
-}
