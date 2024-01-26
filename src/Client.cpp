@@ -34,18 +34,36 @@ void	Client::parseBuffer(char * buffer)
 	{
 		try
 			{parseNego(buffer);}
-		catch (Server::wrongPassword& error)
+		catch (Error::wrongPassword& error)
 			{
 				resetBuffer();
 				_server->deleteClient(this);
 				std::cerr << error.what() << std::endl;
 			}
-		catch (Server::wrongArgument& error)
+		catch (Error::wrongArgument& error)
 			{
 				resetBuffer();
 				_server->deleteClient(this);
 				std::cerr << error.what() << std::endl;
 			}
+		catch (Error::wrongNickname& error)
+			{
+				resetBuffer();
+				_server->deleteClient(this);
+				std::cerr << error.what() << std::endl;
+			}
+		catch (Error::usedNickname& error)
+			{
+				resetBuffer();
+				_server->deleteClient(this);
+				std::cerr << error.what() << std::endl;
+			}
+		catch (Error::usedUsername& error)
+			{
+				resetBuffer();
+				_server->deleteClient(this);
+				std::cerr << error.what() << std::endl;
+			}	
 	}
 	else
 		parseMsg(buffer);
@@ -83,25 +101,31 @@ void	Client::parseNego(char *buffer)
 				message = ERR_PASSWDMISMATCH(getHostname());
 				std::cout << "Responding to client " << getFd() << " with message " << message ;
 				send(getFd(), message.c_str(), message.size(), 0);
-				throw Server::wrongPassword();
+				throw Error::wrongPassword();
 			}
 			setNego(2);
 		}
 		else if (command.size() > 4 && command.substr(0,4) == "NICK" && getNego() == 2) 
 		{
+			if(!checkNick(command.substr(5)))
+				throw Error::wrongNickname();
+			if(!checkDoubleNick(command.substr(5)))
+				throw Error::usedNickname();
 			setNick(command.substr(5));
 			setNego(3);
 		}
 		else if (command.size() > 4 && command.substr(0,4) == "USER" && getNego() == 3)
 		{
 			char* commandbis = &command[5];
+			if(!checkDoubleUser(commandbis))
+				throw Error::usedUsername();
 			setUser(strtok(commandbis, " "));
 			setFullName(command.substr(command.find(":") + 1));
 			sendWelcome();
 			setNego(4);
 		}
 		else
-			throw Server::wrongArgument();
+			throw Error::wrongArgument();
 	}
 	resetBuffer();
 }
@@ -142,6 +166,16 @@ void	Client::parseMsg(char *buffer)
 	}
 	if (command.size() > 3 && command.substr(0,3) == "WHO")
 		getServer()->whoReply(this, buffer);
+	if (command.size() > 4 && command.substr(0,3) == "NICK")
+	{
+		if(checkNick(command.substr(5)) && checkDoubleNick(command.substr(5)))
+			setNick(command.substr(5));
+	}
+	if (command.size() > 4 && command.substr(0,3) == "USER")
+	{
+		if(checkDoubleUser(command.substr(5).c_str()))
+			setUser(command.substr(5));
+	}
 }
 
 //GETTER//
@@ -151,4 +185,47 @@ std::string	Client::getFirstChannel() const
 	if(_chan.empty())
 		return ("*");
 	return (_chan[0]->getName());
+}
+
+bool		Client::checkNick(std::string nick)
+{
+	std::string	message;
+	if (nick[0] == '#' || nick[0] == '&' || nick[0] == ':' || nick[0] == '@' || nick[0] == '!' || nick.find(' ') != std::string::npos)
+	{
+		std::cout << nick << std::endl;
+		message = ERR_ERRONEUSNICKNAME(getHostname(), nick);
+		send(getFd(), message.c_str(), message.size(), 0);
+		return false;
+	}	
+	return true;
+}
+
+bool		Client::checkDoubleNick(std::string nick)
+{
+	std::string	message;
+	for (std::vector<Client*>::iterator it = getServer()->getClient().begin(); it != getServer()->getClient().end(); it++)
+	{
+		if((*it)->getNick() == nick)
+		{
+			message = ERR_NICKNAMEINUSE(getHostname(),nick);
+			send(getFd(), message.c_str(), message.size(), 0);
+			return false;
+		}
+	}
+	return true;
+}
+
+bool		Client::checkDoubleUser(const char* user)
+{
+	std::string	message;
+	for (std::vector<Client*>::iterator it = getServer()->getClient().begin(); it != getServer()->getClient().end(); it++)
+	{
+		if((*it)->getUser() == user)
+		{				
+			message = ERR_ALREADYREGISTERED(getHostname());
+			send(getFd(), message.c_str(), message.size(), 0);
+			return false;
+		}
+	}
+	return true;
 }

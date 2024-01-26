@@ -8,6 +8,9 @@
 #define RPL_CREATED(client, date)	                                                            "003 " + client + " :This server was created " + date
 #define RPL_MYINFO(client)		                                                                "004 " + client + " EasyRC v0.1 N/A N/A\n"
 #define RPL_ENDOFWHO(client, mask)                                                              "315 " + client + " " + mask + " :End of WHO list\n"
-#define RPL_WHOREPLY(client, channel, username, hostname, serverhostname, nickname, realname)   "352 " + client + ": " + channel + " " + username + " " + hostname + " " + serverhostname + " " + nickname + " H :0 " + realname + "\n"
+#define RPL_WHOREPLY(client, channel, username, hostname, serverhostname, nickname, realname)   "352 " + client + ":" + channel + " " + username + " " + hostname + " " + serverhostname + " " + nickname + " H :0 " + realname + "\n"
 #define ERR_NEEDMOREPARAMS(client, command)                                                     "461 " + client + " " + command + ":Not enough parameters\n"
 #define ERR_PASSWDMISMATCH(client)                                                              "464 " + client + " :Password incorrect\n"
+#define ERR_NICKNAMEINUSE(client, nick)                                                         "433 " + client + " " + nick + " :Nickname is already in use\n"
+#define ERR_ERRONEUSNICKNAME(client, nick)                                                      "432 " + client + " " + nick + " :Erroneus nickname\n"
+#define ERR_ALREADYREGISTERED(client)                                                           "462 " + client + " :You may not reregister\n"
