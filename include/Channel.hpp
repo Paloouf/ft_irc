@@ -12,8 +12,9 @@ class Channel{
 		Channel(Server* server, std::string name, Client* client);
 		~Channel();
 
-    		std::vector<Client*>	&getClient(){return _clients;}
-    		std::vector<Client*>	&getAdmins(){return _admins;}
+
+    std::vector<Client*>	&getClient(){return _clients;}
+    std::vector<Client*>	&getAdmins(){return _admins;}
 		std::string getName()const {return _name;}
 		std::string getTopic() const {return _topic;}
 		bool	isAdmin(Client* client);
@@ -26,6 +27,7 @@ class Channel{
 		void	removeMode(Client *client,std::string, std::string);
 		void	addMode(Client *client,std::string, std::string);
 		void	setTopic(std::string topic) {_topic = topic;}
+		void	deleteUser(Client *client);
 
 	private:
 		Channel();
@@ -37,7 +39,10 @@ class Channel{
 		bool			_l;
 		bool			_k;
 		std::string		_topic;
+
 		Client*			_creator;
 		std::vector<Client*> 	_admins;
 		std::vector<Client*> 	_clients;
+
 };
+

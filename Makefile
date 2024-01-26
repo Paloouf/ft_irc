@@ -1,7 +1,6 @@
 NAME = ircserv
 SRC = ${wildcard src/*.cpp}
-	
-	
+
 OBJ = $(SRC:.cpp=.o)
 CC = c++
 
@@ -28,7 +27,7 @@ COMP_START      =       printf "\n🚧 $(BOLD_YELLOW)Make: $(NO_COLOR)Debut de c
 
 EXE_READY       =       echo "\n\n📟 Compilation de $(BOLD_YELLOW)$(NAME)$(NO_COLOR) reussie !\n"
 
-CLEANED         =       echo "\n💧 $(BOLD_YELLOW)Clean: $(NO_COLOR)Suppression des fichiers .o et de l'executable \n"
+CLEANED         =       echo "\n💧 $(BOLD_YELLOW)Clean: $(NO_COLOR)Suppression des fichiers .o \n"
 
 FCLEANED        =       echo "\n🧼 $(BOLD_YELLOW)Fclean: $(NO_COLOR)Suppression des fichiers .o et de l'executable \n"
 
@@ -52,7 +51,9 @@ comp_start:
 
 clean:
 	$(CLEANED)
-	rm -f $(NAME) $(OBJ) *~ core *.core
+
+	rm -f $(OBJ) *~ core *.core
+
 
 fclean:
 	rm -f $(NAME) $(OBJ) *~ core *.core
@@ -60,6 +61,8 @@ fclean:
 
 re: clean all
 
-%.o: $(SRCDIR)/%.cpp
+
+%.o: $(SRCDIR)%.cpp
+
 	@printf "🚧 $(BOLD_YELLOW)Make: $(NO_COLOR)Compilation des fichiers : %-33.33s\r$(NO_COLOR)" $@ $?
 	@${CC} ${FLAGS} -c $< -o $@

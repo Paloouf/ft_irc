@@ -49,12 +49,12 @@ void Channel::join(Client* client){
 
 void	Channel::update(Client *client){
 	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-    	std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
+	std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end() - 1; it++){
 		send((*it)->getFd(), join.c_str(), join.size(), 0);
 		std::cout << (*it)->getFd() << ": updated with " << join;
 	}
-    	
+
 }
 
 void	Channel::sendMsg(Client *client, std::string target, std::string msg){
@@ -67,6 +67,7 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 		}
 	}
 }
+
 
 void	Channel::sendMode(Client *client, std::string target, std::string mode, std::string msg){
 	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
@@ -171,3 +172,30 @@ void    Channel::addMode(Client *client,std::string add, std::string param){
             _l = true;
     }
 }
+
+
+void	Channel::deleteUser(Client *client)
+{
+	for (unsigned i = 0; i < _admins.size(); i++)
+	{
+		if (_admins[i]->getFd() == client->getFd())
+		{
+			_admins.erase(_admins.begin() + i);
+			i = 0;
+		}
+	}
+	for (unsigned i = 0; i < _clients.size(); i++)
+	{
+		if (_clients[i]->getFd() == client->getFd())
+		{
+			_clients.erase(_clients.begin() + i);
+			i = 0;
+		}
+	}
+	if (_clients.size() > 0 && _admins.size() == 0)
+	{
+		_admins.push_back(_clients[0]);
+		//need to add sendmsg fonction for tell at all client the new admin in chan
+	}
+}
+
