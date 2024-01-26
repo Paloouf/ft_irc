@@ -57,6 +57,7 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 	}
 }
 
+
 void	Channel::deleteUser(Client *client)
 {
 	for (unsigned i = 0; i < _admins.size(); i++)
@@ -81,3 +82,4 @@ void	Channel::deleteUser(Client *client)
 		//need to add sendmsg fonction for tell at all client the new admin in chan
 	}
 }
+

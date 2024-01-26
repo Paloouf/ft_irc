@@ -1,7 +1,6 @@
 NAME = ircserv
 SRC = ${wildcard src/*.cpp}
 
-
 OBJ = $(SRC:.cpp=.o)
 CC = c++
 
@@ -52,7 +51,9 @@ comp_start:
 
 clean:
 	$(CLEANED)
+
 	rm -f $(OBJ) *~ core *.core
+
 
 fclean:
 	rm -f $(NAME) $(OBJ) *~ core *.core
@@ -60,6 +61,8 @@ fclean:
 
 re: clean all
 
+
 %.o: $(SRCDIR)%.cpp
+
 	@printf "🚧 $(BOLD_YELLOW)Make: $(NO_COLOR)Compilation des fichiers : %-33.33s\r$(NO_COLOR)" $@ $?
 	@${CC} ${FLAGS} -c $< -o $@
