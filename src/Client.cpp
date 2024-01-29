@@ -163,11 +163,6 @@ void	Client::parseMsg(char *buffer)
 			setNick(command.substr(5));
 		}
 	}
-	if (command.size() > 4 && command.substr(0,4) == "USER")
-	{
-		if(checkDoubleUser(command.substr(5).c_str()))
-			setUser(command.substr(5));
-  }
 	if (command.substr(0,7) == "PRIVMSG")
 	{
 		char* commandbis = &command[8];
