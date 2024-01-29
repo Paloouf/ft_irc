@@ -140,20 +140,20 @@ void	Client::parseMsg(char *buffer)
 	std::string command = buffer;
 	std::cout << "MSG:" << command << std::endl;
 	std::string	message;
-	if (command.size() > 4 && command.substr(0,4) == "PING")
+	if (command.size() > 4 && command.substr(0,5) == "PING ")
 	{	
 		std::cout << "Getting Ping request from client " << getFd() << std::endl;
 		message = "PONG " + command.substr(5) + "\n";
 		std::cout << "Responding to ping request from client " << getFd() << " with message " << message << std::endl;
 		send(getFd(), message.c_str(), message.size(), 0);
 	}
-	if (command.size() > 4 && command.substr(0,4) == "JOIN")
+	if (command.size() > 4 && command.substr(0,5) == "JOIN ")
 	{
     		getServer()->checkChannel(this, command.substr(5, command.size() - 6));
 	}
-	if (command.size() > 3 && command.substr(0,3) == "WHO")
+	if (command.size() > 3 && command.substr(0,4) == "WHO ")
 		getServer()->whoReply(this, buffer);
-	if (command.size() > 4 && command.substr(0,4) == "NICK")
+	if (command.size() > 4 && command.substr(0,5) == "NICK ")
 	{
 		if(checkNick(command.substr(5)) && checkDoubleNick(command.substr(5)))
 		{
@@ -163,7 +163,7 @@ void	Client::parseMsg(char *buffer)
 			setNick(command.substr(5));
 		}
 	}
-	if (command.substr(0,7) == "PRIVMSG")
+	if (command.substr(0,8) == "PRIVMSG ")
 	{
 		char* commandbis = &command[8];
 		std::string target = strtok(commandbis, " ");
@@ -175,7 +175,7 @@ void	Client::parseMsg(char *buffer)
 			}
 		}
 	}
-	if(command.substr(0,4) == "MODE"){
+	if(command.substr(0,5) == "MODE "){
 		char* commandbis = &command[5];
 		std::string target = strtok(commandbis, " ");
 		if (target[0] == '#'){
