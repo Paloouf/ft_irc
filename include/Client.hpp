@@ -28,6 +28,7 @@ class Client{
 		std::string getHost() const {return _hostname;}
 		std::string getFullName() const {return _fullName;}
 		std::string getCommand() const {return _command;}
+		std::string getPrefix() const {return _prefix;}
 
     std::string getFirstChannel() const;
 		std::vector<Channel*> &getChan()  {return _chan;}
@@ -39,6 +40,7 @@ class Client{
 		void	setUser(const std::string user){this->_user = user;}
 		void	setHost(const std::string hostname){this->_hostname = hostname;}
 		void	setFullName(const std::string fullName){this->_fullName = fullName;}
+		void	setPrefix();
 	private:
 		Server* _server;
 		int	_fd;
@@ -47,6 +49,7 @@ class Client{
 		std::string _fullName;
 		std::string _user;
 		std::string _nick;
+		std::string _prefix;
 		std::string _command;
 		std::string _hostname;		
 		std::vector<Channel*> _chan;	

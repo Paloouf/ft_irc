@@ -80,43 +80,40 @@ void	Channel::sendMode(Client *client, std::string target, std::string mode, std
 }
 
 void    Channel::parseMode(Client *client, std::string target, std::string buff){
-    std::stringstream smodes(buff);
-    std::string modes, param;
-    smodes >> modes >> param;
-    if (modes.find("-") != std::string::npos){
-        //remove modes
-        size_t i = modes.find("-");
-        std::string del;
-        i++;
-        while (i != modes.find("+") && i < modes.size()){
-            del += modes[i];
-            i++;
-        }
-        removeMode(client, del, param);
-    }
-    if (modes.find("+") != std::string::npos){
-        //add modes
-        size_t i = modes.find("+");
-        std::cout << "i: " << i << ", size: " << modes.size() << std::endl;
-        std::string add;
-        i++;
-        while (i != modes.find("-") && i < modes.size()){
-            add += modes[i];
-            i++;
-        }
-        addMode(client, add, param);
-        std::cout << target << " miaou " << client->getFd() << std::endl;
-    }
+	std::stringstream smodes(buff);
+	std::string modes, param;
+	smodes >> modes;
+	while (std::getline(smodes, param, ' ')){
+		std::cout << "YO MODE" << param;
+		if (modes.find("-") != std::string::npos){
+			//remove modes
+			size_t i = modes.find("-");
+			std::string del;
+			i++;
+			while (i != modes.find("+") && i < modes.size()){
+			del += modes[i];
+			i++;
+			}
+			removeMode(client, del, param);
+		}
+		if (modes.find("+") != std::string::npos){
+			//add modes
+			size_t i = modes.find("+");
+			std::cout << "i: " << i << ", size: " << modes.size() << std::endl;
+			std::string add;
+			i++;
+			while (i != modes.find("-") && i < modes.size()){
+			add += modes[i];
+			i++;
+			}
+			addMode(client, add, param);
+			std::cout << target << " miaou " << client->getFd() << std::endl;
+		}
+	}
 }
 
 void    Channel::removeMode(Client *client,std::string del, std::string param){
-    std::cout << del;
-    bool    isAdmin = false;
-    for (std::vector<Client*>::iterator it = _admins.begin(); it != _admins.end(); it++){
-        if ((*it)->getFd() == client->getFd())
-            isAdmin = true;
-    }
-    if (isAdmin){
+    if (this->isAdmin(client)){
         if (del.find("i") != std::string::npos)
             _i = false;
         if (del.find("t") != std::string::npos)
@@ -124,7 +121,21 @@ void    Channel::removeMode(Client *client,std::string del, std::string param){
         if (del.find("k") != std::string::npos)
             _k = false;
         if (del.find("o") != std::string::npos){
-            std::cout << "Removed operator privileges for : " << param;
+            std::cout << "Removed operator privileges for : " << param << std::endl;
+	    std::string msg = param + "\n";
+	    for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+                if ((*it)->getNick() == param){
+                    if (this->isAdmin((*it)) && _admins.size() > 1 && client->getNick() != param){
+			std::remove(_admins.begin(), _admins.end(), (*it));
+                        _admins.pop_back();
+			std::cout << "minou\n";
+                        sendMode(client, getName(), "-o", msg);
+			//broadcast(RPL_REMOP(client->getPrefix(), getName(), msg));
+                    }
+                    else
+                        std::cout << (*it)->getNick() << " is not admin\n";
+                }
+            } 
         }
         if (del.find("l") != std::string::npos)
             _l = false;
@@ -132,16 +143,14 @@ void    Channel::removeMode(Client *client,std::string del, std::string param){
 }
 
 bool    Channel::isAdmin(Client* client){
-    bool    isAdmin = false;
     for (std::vector<Client*>::iterator it = _admins.begin(); it != _admins.end(); it++){
         if ((*it)->getFd() == client->getFd())
-            isAdmin = true;
+            return true;
     }
-    return (isAdmin);
+    return (false);
 }
 
 void    Channel::addMode(Client *client,std::string add, std::string param){
-    std::cout << add << param;
     if (this->isAdmin(client)){
         if (add.find("i") != std::string::npos)
             _i = true;
@@ -151,6 +160,7 @@ void    Channel::addMode(Client *client,std::string add, std::string param){
             std::cout << "New pass for " << this->getName() << " is " << param << std::endl;
             _k = true;
             setPass(param);
+	    //broadcast(RPL_NEWPASS())
         }
         if (add.find("o") != std::string::npos){
             std::cout << "Added operator privileges for : " << param;
@@ -160,12 +170,11 @@ void    Channel::addMode(Client *client,std::string add, std::string param){
                     if (!this->isAdmin((*it))){
                         _admins.push_back((*it));
                         sendMode(client, getName(), "+o", msg);
+			//broadcast(RPL_ADDOP(client->getPrefix(), getName(), msg));
                     }
                     else
                         std::cout << (*it)->getNick() << " is already admin\n";
                 }
-                else
-                    std::cout << param << " doesn't match any username\n";
             }  
         }
         if (add.find("l") != std::string::npos)
