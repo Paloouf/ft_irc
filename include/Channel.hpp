@@ -27,6 +27,7 @@ class Channel{
 		void	removeMode(Client *client,std::string, std::string);
 		void	addMode(Client *client,std::string, std::string);
 		void	setTopic(std::string topic) {_topic = topic;}
+		void	broadcast(std::string message);
 		void	deleteUser(Client *client);
 
 	private:

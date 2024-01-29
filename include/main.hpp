@@ -20,5 +20,6 @@
 #include <map>
 #include <iomanip>
 #include <unistd.h>
+#include <cstring>
+#include "Error.hpp"
 #include <algorithm>
-

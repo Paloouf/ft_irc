@@ -69,6 +69,13 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 }
 
 
+void	Channel::broadcast(std::string message)
+{
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+		send((*it)->getFd(), message.c_str(), message.size(), 0);
+}
+
+
 void	Channel::sendMode(Client *client, std::string target, std::string mode, std::string msg){
 	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
     	std::string fullmsg = ":" + prefix + " MODE " + target + " " + mode + " " + msg;
