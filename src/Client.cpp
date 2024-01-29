@@ -96,6 +96,7 @@ void	Client::parseNego(char *buffer)
 			char* commandbis = &command[5];
 			setUser(strtok(commandbis, " "));
 			setFullName(command.substr(command.find(":") + 1));
+			setPrefix();
 			sendWelcome();
 			setNego(4);
 		}
@@ -105,6 +106,10 @@ void	Client::parseNego(char *buffer)
 	resetBuffer();
 }
 
+void	Client::setPrefix(){
+	std::string prefix = this->getNick() + (this->getUser().empty() ? "" : "!" + this->getUser()) + (this->getHostname().empty() ? "" : "@" + this->getHostname());
+	_prefix = prefix;
+}
 
 void	Client::parseMsg(char *buffer)
 {
