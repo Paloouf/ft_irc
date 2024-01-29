@@ -149,7 +149,7 @@ void	Client::parseMsg(char *buffer)
 	}
 	if (command.size() > 4 && command.substr(0,4) == "JOIN")
 	{
-    	getServer()->checkChannel(this, command.substr(5, command.size() - 6));
+    		getServer()->checkChannel(this, command.substr(5, command.size() - 6));
 	}
 	if (command.size() > 3 && command.substr(0,3) == "WHO")
 		getServer()->whoReply(this, buffer);
