@@ -120,6 +120,7 @@ void	Client::parseNego(char *buffer)
 				throw Error::usedUsername();
 			setUser(strtok(commandbis, " "));
 			setFullName(command.substr(command.find(":") + 1));
+			setPrefix();
 			sendWelcome();
 			setNego(4);
 		}
@@ -129,6 +130,10 @@ void	Client::parseNego(char *buffer)
 	resetBuffer();
 }
 
+void	Client::setPrefix(){
+	std::string prefix = this->getNick() + (this->getUser().empty() ? "" : "!" + this->getUser()) + (this->getHostname().empty() ? "" : "@" + this->getHostname());
+	_prefix = prefix;
+}
 
 void	Client::parseMsg(char *buffer)
 {
@@ -171,6 +176,17 @@ void	Client::parseMsg(char *buffer)
 			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
 				if ((*it)->getName() == target){
 					(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
+				}
+			}
+		}
+	}
+	if(command.substr(0,4) == "MODE"){
+		char* commandbis = &command[5];
+		std::string target = strtok(commandbis, " ");
+		if (target[0] == '#'){
+			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+				if ((*it)->getName() == target){
+					(*it)->parseMode(this, target, command.substr(5 + target.size()));
 				}
 			}
 		}
@@ -226,6 +242,7 @@ bool		Client::checkDoubleUser(const char* user)
 	}
 	return true;
 }
+
 
 void	Client::sendWelcome()
 {
