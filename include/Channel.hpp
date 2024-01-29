@@ -17,6 +17,7 @@ class Channel{
     std::vector<Client*>	&getAdmins(){return _admins;}
 		std::string getName()const {return _name;}
 		std::string getTopic() const {return _topic;}
+		std::string getPass() const {return _pass;}
 		bool	isAdmin(Client* client);
 		void	setPass(std::string pass){_pass = pass;}
 		void	join(Client* client);
@@ -24,9 +25,10 @@ class Channel{
 		void	sendMsg(Client* client, std::string target, std::string msg);
 		void	sendMode(Client* client, std::string, std::string, std::string);
 		void	parseMode(Client *client, std::string target, std::string modes);
-		void	removeMode(Client *client,std::string, std::string);
-		void	addMode(Client *client,std::string, std::string);
+		void	removeMode(Client *client,std::string, std::vector<std::string>);
+		void	addMode(Client *client,std::string, std::vector<std::string>);
 		void	setTopic(std::string topic) {_topic = topic;}
+		void	broadcast(std::string message);
 		void	deleteUser(Client *client);
 
 	private:

@@ -8,9 +8,9 @@ Server::Server(std::string port, std::string password): _port(port), _password(p
 	setTime();
 	std::cout << "Server active" << std::endl;
 	try {checkInput();}
-	catch (Server::portNonDigit& error)
+	catch (Error::portNonDigit& error)
 		{std::cerr << error.what() << std::endl;}
-	catch (Server::portTooHigh& error)
+	catch (Error::portTooHigh& error)
 		{std::cerr << error.what() << std::endl;}
 	listening();
 }
@@ -28,9 +28,9 @@ void		Server::checkInput()
 {
 	for (int i = 0; _port[i] != 0; i++)
 		if (!std::isdigit(_port[i]))
-			throw Server::portNonDigit();
+			throw Error::portNonDigit();
 	if (std::atol(_port.c_str()) > 64738 || _port.size() > 5)
-		throw Server::portTooHigh();
+		throw Error::portTooHigh();
 }
 
 
@@ -39,7 +39,8 @@ Server::~Server(){
 
 //SERVER LISTENING//
 
-void	Server::listening(){
+void	Server::listening()
+{
 	struct sockaddr_in address;
 	struct in_addr addr;
 	addr.s_addr = INADDR_ANY;
@@ -240,5 +241,8 @@ void	Server::checkChannel(Client *client, std::string buffer){
 	}
 }
 
-
-
+void	Server::broadcast(std::string message)
+{
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+		send((*it)->getFd(), message.c_str(), message.size(), 0);
+}
