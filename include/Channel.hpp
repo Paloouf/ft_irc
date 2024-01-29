@@ -19,7 +19,7 @@ class Channel{
 		void	update(Client* client);
 		void	sendMsg(Client* client, std::string target, std::string msg);
 		void	setTopic(std::string topic) {_topic = topic;}
-
+		void	broadcast(std::string message);
 	private:
 		Channel();
 		Server*			_server;

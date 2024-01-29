@@ -56,3 +56,8 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 	}
 }
 
+void	Channel::broadcast(std::string message)
+{
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+		send((*it)->getFd(), message.c_str(), message.size(), 0);
+}

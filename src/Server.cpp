@@ -39,7 +39,8 @@ Server::~Server(){
 
 //SERVER LISTENING//
 
-void	Server::listening(){
+void	Server::listening()
+{
 	struct sockaddr_in address;
 	struct in_addr addr;
 	addr.s_addr = INADDR_ANY;
@@ -58,7 +59,7 @@ void	Server::listening(){
 	createFd();
 	while (1)
 		waitInput();
-
+}
 //DATA REPLYING//
 
 void	Server::whoReply(Client* client, char* buffer)
@@ -214,5 +215,8 @@ void	Server::checkChannel(Client *client, std::string buffer){
 	}
 }
 
-
-
+void	Server::broadcast(std::string message)
+{
+	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+		send((*it)->getFd(), message.c_str(), message.size(), 0);
+}

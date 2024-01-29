@@ -134,31 +134,34 @@ void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
 	std::cout << "MSG:" << command << std::endl;
-
+	std::string	message;
 	if (command.size() > 4 && command.substr(0,4) == "PING")
 	{	
 		std::cout << "Getting Ping request from client " << getFd() << std::endl;
-		std::string pong = "PONG " + command.substr(5) + "\n";
-		std::cout << "Responding to ping request from client " << getFd() << " with message " << pong << std::endl;
-		send(getFd(), pong.c_str(), pong.size(), 0);
+		message = "PONG " + command.substr(5) + "\n";
+		std::cout << "Responding to ping request from client " << getFd() << " with message " << message << std::endl;
+		send(getFd(), message.c_str(), message.size(), 0);
 	}
 	if (command.size() > 4 && command.substr(0,4) == "JOIN")
 	{
-    getServer()->checkChannel(this, command.substr(5, command.size() - 6));
+    	getServer()->checkChannel(this, command.substr(5, command.size() - 6));
 	}
 	if (command.size() > 3 && command.substr(0,3) == "WHO")
 		getServer()->whoReply(this, buffer);
-<<<<<<< HEAD
-	if (command.size() > 4 && command.substr(0,3) == "NICK")
+	if (command.size() > 4 && command.substr(0,4) == "NICK")
 	{
 		if(checkNick(command.substr(5)) && checkDoubleNick(command.substr(5)))
+		{
+			message = NEW_NICK(getNick(), command.substr(5));
+			std::cout << "Sending nickname change broadcast : " << message;
+			getServer()->broadcast(message);
 			setNick(command.substr(5));
+		}
 	}
-	if (command.size() > 4 && command.substr(0,3) == "USER")
+	if (command.size() > 4 && command.substr(0,4) == "USER")
 	{
 		if(checkDoubleUser(command.substr(5).c_str()))
 			setUser(command.substr(5));
-=======
   }
 	if (command.substr(0,7) == "PRIVMSG")
 	{
@@ -171,7 +174,6 @@ void	Client::parseMsg(char *buffer)
 				}
 			}
 		}
->>>>>>> 1e54c5827d3f05fdb5c004ffab86770d365ed4d7
 	}
 }
 
@@ -180,7 +182,6 @@ std::string	Client::getFirstChannel() const
 	if(_chan.empty())
 		return ("*");
 	return (_chan[0]->getName());
-<<<<<<< HEAD
 }
 
 bool		Client::checkNick(std::string nick)
@@ -224,7 +225,7 @@ bool		Client::checkDoubleUser(const char* user)
 		}
 	}
 	return true;
-=======
+}
 
 void	Client::sendWelcome()
 {
@@ -241,5 +242,4 @@ void	Client::sendWelcome()
 	send(getFd(), message.c_str(), message.size(), 0);
 	std::cout << "Responding to client " << getFd() << " with message " << message;
 	std::cout << "Successfully registered client " << getHostname() << std::endl << std::endl;
->>>>>>> 1e54c5827d3f05fdb5c004ffab86770d365ed4d7
 }
