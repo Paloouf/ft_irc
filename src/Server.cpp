@@ -215,13 +215,7 @@ void	Server::receiveData(Client *client){
 		return;
 	}
 	buffer[err] = '\0';
-	if (err == 0 && client->getCommand().size() == 0)
-	{
-		deleteClient(client);
-		std::cout << "client disconnected\n";
-	}
-	else
-		client->parseBuffer(buffer);
+	client->parseBuffer(buffer);
 }
 
 //CHANNEL CHECK//

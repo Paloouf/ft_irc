@@ -8,7 +8,7 @@ Client::Client(Server *server, int fd, std::string hostname, int port) :_server(
 }
 
 Client::~Client(){
-	std::cout << "Client dead\n";
+	std::cout << "Client destructor called\n";
 }
 
 Client& Client::operator=(const Client& ref){
@@ -186,6 +186,16 @@ void	Client::parseMsg(char *buffer)
 			}
 		}
 	}
+	if (command.substr(0,5) == "QUIT ")
+	{
+		_server->deleteClient(this);
+	}
+	if (command.substr(0,5) == "PART "){
+		std::string target = command.substr(command.find("#"), command.find(":") - 2);
+		std::cout << command << std::endl;
+		//flemme
+	}
+
 }
 
 std::string	Client::getFirstChannel() const

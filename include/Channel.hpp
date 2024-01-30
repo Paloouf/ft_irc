@@ -18,6 +18,7 @@ class Channel{
 		std::string getName()const {return _name;}
 		std::string getTopic() const {return _topic;}
 		std::string getPass() const {return _pass;}
+		void	setLimit(Client*, std::string);
 		bool	isAdmin(Client* client);
 		void	setPass(std::string pass){_pass = pass;}
 		void	join(Client* client);
@@ -37,10 +38,12 @@ class Channel{
 		std::string		_name;
 		std::string		_pass;
 		bool			_i;
+		bool			_o;
 		bool			_t;
 		bool			_l;
 		bool			_k;
 		std::string		_topic;
+		int				_limit;
 
 		Client*			_creator;
 		std::vector<Client*> 	_admins;
