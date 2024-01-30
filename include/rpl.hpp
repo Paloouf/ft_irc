@@ -25,3 +25,4 @@
 #define RPL_REMOP(prefix, target, msg)   	":" + prefix + " MODE " + target + " -o " + msg
 #define RPL_NEWPASS(prefix, target, msg)	":" + prefix + " MODE " + target + " +k " + msg + "\n"
 #define RPL_REMPASS(prefix, target)	":" + prefix + " MODE " + target + " -k\n"
+
