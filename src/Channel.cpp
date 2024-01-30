@@ -166,88 +166,123 @@ bool    Channel::isAdmin(Client* client){
 
 void    Channel::addMode(Client *client,std::string add, std::vector<std::string> params){
 	//PROBLEME SI PAS D'ARGUMENTS DERRIERE
-	for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++){
-		std::string param = (*it);
-		if (this->isAdmin(client)){
-			if (add.find("i") != std::string::npos)
-			_i = true;
-			if (add.find("t") != std::string::npos)
-			_t = true;
-			if (add.find("o") < add.find("k") && add.find("k") != std::string::npos){
-				std::cout << "MAIAAAOIWIOFAWIFOIFAOINFOAN\n";
-				if (param[param.size() - 1] == '\n'){
-					std::cout << "New pass for " << this->getName() << " is " << param << std::endl;
-					_k = true;
-					setPass(param);
-					broadcast(RPL_NEWPASS(client->getPrefix(), getName(), getPass()));
-				}
-				else{
-					std::string msg = param + "\n";
-					for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-						std::cout << "Nique: " << (*it)->getNick() << "nicksize: " << param.size() << std::endl;
-						if ((*it)->getNick() + "\n" == param || (*it)->getNick() == param){
-							if (!this->isAdmin((*it))){
-								_admins.push_back((*it));
-								//sendMode(client, getName(), "+o", msg);
-								broadcast(RPL_ADDOP(client->getPrefix(), getName(), msg));
-							}
-						}
-						else
-							std::cout << (*it)->getNick() << " is already admin\n";
+    int size = params.size();
+    char    c;
+    int i = 0;
+    while (c = add[i])
+    {
+        switch(c){
+            case 'k':{
+                std::cout << "Mode K\n";
+                break;
+            }
+            case 'o':{
+                std::cout << "Mode O\n";
+                break;
+            }
+            case 'i':{
+                std::cout << "Mode i\n";
+                break;
+            }
+            case 'l':{
+                std::cout << "Mode l\n";
+                break;
+            }
+            case 't':{
+                std::cout << "Mode t\n";
+                break;
+            }
+            default:{
+                break;
+            }
+        }
+        i++;
+    }
+
+
+
+	// for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++){
+	// 	std::string param = (*it);
+	// 	if (this->isAdmin(client)){
+	// 		if (add.find("i") != std::string::npos)
+	// 		_i = true;
+	// 		if (add.find("t") != std::string::npos)
+	// 		_t = true;
+	// 		if (add.find("o") < add.find("k") && add.find("k") != std::string::npos){
+	// 			std::cout << "MAIAAAOIWIOFAWIFOIFAOINFOAN\n";
+	// 			if (param[param.size() - 1] == '\n'){
+	// 				std::cout << "New pass for " << this->getName() << " is " << param << std::endl;
+	// 				_k = true;
+	// 				setPass(param);
+	// 				broadcast(RPL_NEWPASS(client->getPrefix(), getName(), getPass()));
+	// 			}
+	// 			else{
+	// 				std::string msg = param + "\n";
+	// 				for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+	// 					std::cout << "Nique: " << (*it)->getNick() << "nicksize: " << param.size() << std::endl;
+	// 					if ((*it)->getNick() + "\n" == param || (*it)->getNick() == param){
+	// 						if (!this->isAdmin((*it))){
+	// 							_admins.push_back((*it));
+	// 							//sendMode(client, getName(), "+o", msg);
+	// 							broadcast(RPL_ADDOP(client->getPrefix(), getName(), msg));
+	// 						}
+	// 					}
+	// 					else
+	// 						std::cout << (*it)->getNick() << " is already admin\n";
 						
-					} 
-				}
-			}
-			if (add.find("k") != std::string::npos && add.find("o") == std::string::npos){
-			std::cout << "New pass for " << this->getName() << " is " << param << std::endl;
-			_k = true;
-			setPass(param);
-			broadcast(RPL_NEWPASS(client->getPrefix(), getName(), getPass()));
-			}
-			if (add.find("o") != std::string::npos && add.find("k") == std::string::npos){
-			std::cout << "Added operator privileges for : " << param;
-			std::string msg = param + "\n";
-			for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-				std::cout << "Nique: " << (*it)->getNick() << "nicksize: " << param.size() << std::endl;
-				if ((*it)->getNick() + "\n" == param || (*it)->getNick() == param){
-				if (!this->isAdmin((*it))){
-					_admins.push_back((*it));
-					//sendMode(client, getName(), "+o", msg);
-					broadcast(RPL_ADDOP(client->getPrefix(), getName(), msg));
-				}
-				else
-					std::cout << (*it)->getNick() << " is already admin\n";
-				}
-			}  
-			}
-			if (add.find("k") < add.find("o") && add.find("o") != std::string::npos){
-				if (it == params.begin()){
-					std::cout << "New pass for " << this->getName() << " is " << param << std::endl;
-					_k = true;
-					setPass(param);
-					broadcast(RPL_NEWPASS(client->getPrefix(), getName(), getPass()));
-				}
-				else{
-					std::cout << "Added operator privileges for : " << param;
-					std::string msg = param + "\n";
-					for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-						std::cout << "Nique: " << (*it)->getNick() << "nicksize: " << param.size() << std::endl;
-						if ((*it)->getNick() + "\n" == param || (*it)->getNick() == param){
-							if (!this->isAdmin((*it))){
-								_admins.push_back((*it));
-								//sendMode(client, getName(), "+o", msg);
-								broadcast(RPL_ADDOP(client->getPrefix(), getName(), msg));
-							}
-							else
-								std::cout << (*it)->getNick() << " is already admin\n";
-						}
-					} 
-				}
-			}
-			if (add.find("l") != std::string::npos)
-			_l = true;
-		}
-	}
+	// 				} 
+	// 			}
+	// 		}
+	// 		if (add.find("k") != std::string::npos && add.find("o") == std::string::npos){
+	// 		std::cout << "New pass for " << this->getName() << " is " << param << std::endl;
+	// 		_k = true;
+	// 		setPass(param);
+	// 		broadcast(RPL_NEWPASS(client->getPrefix(), getName(), getPass()));
+	// 		}
+	// 		if (add.find("o") != std::string::npos && add.find("k") == std::string::npos){
+	// 		std::cout << "Added operator privileges for : " << param;
+	// 		std::string msg = param + "\n";
+	// 		for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+	// 			std::cout << "Nique: " << (*it)->getNick() << "nicksize: " << param.size() << std::endl;
+	// 			if ((*it)->getNick() + "\n" == param || (*it)->getNick() == param){
+	// 			if (!this->isAdmin((*it))){
+	// 				_admins.push_back((*it));
+	// 				//sendMode(client, getName(), "+o", msg);
+	// 				broadcast(RPL_ADDOP(client->getPrefix(), getName(), msg));
+	// 			}
+	// 			else
+	// 				std::cout << (*it)->getNick() << " is already admin\n";
+	// 			}
+	// 		}  
+	// 		}
+	// 		if (add.find("k") < add.find("o") && add.find("o") != std::string::npos){
+	// 			if (it == params.begin()){
+	// 				std::cout << "New pass for " << this->getName() << " is " << param << std::endl;
+	// 				_k = true;
+	// 				setPass(param);
+	// 				broadcast(RPL_NEWPASS(client->getPrefix(), getName(), getPass()));
+	// 			}
+	// 			else{
+	// 				std::cout << "Added operator privileges for : " << param;
+	// 				std::string msg = param + "\n";
+	// 				for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+	// 					std::cout << "Nique: " << (*it)->getNick() << "nicksize: " << param.size() << std::endl;
+	// 					if ((*it)->getNick() + "\n" == param || (*it)->getNick() == param){
+	// 						if (!this->isAdmin((*it))){
+	// 							_admins.push_back((*it));
+	// 							//sendMode(client, getName(), "+o", msg);
+	// 							broadcast(RPL_ADDOP(client->getPrefix(), getName(), msg));
+	// 						}
+	// 						else
+	// 							std::cout << (*it)->getNick() << " is already admin\n";
+	// 					}
+	// 				} 
+	// 			}
+	// 		}
+	// 		if (add.find("l") != std::string::npos)
+	// 		_l = true;
+	// 	}
+	// }
 }
 
 
