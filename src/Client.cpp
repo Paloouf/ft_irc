@@ -191,10 +191,10 @@ void	Client::parseMsg(char *buffer)
 		_server->deleteClient(this);
 	}
 	if (command.substr(0,5) == "PART "){
-		std::string target = command.substr(command.find("#"), command.find(" ") + 3);
+		std::string target = command.substr(command.find("#"));
 		std::cout << target << std::endl;
 		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
-			if (target == (*it)->getName()){
+			if (target.find((*it)->getName()) != std::string::npos){
 				std::cout << "KIKOUPOUET\n";
 				
 				std::cout << RPL_PART(getPrefix(), (*it)->getName());
