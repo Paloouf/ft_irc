@@ -138,7 +138,7 @@ void	Client::setPrefix(){
 void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
-	std::cout << "MSG:" << command << std::endl;
+	std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
 	std::string	message;
 	if (command.size() > 4 && command.substr(0,5) == "PING ")
 	{	
@@ -191,9 +191,17 @@ void	Client::parseMsg(char *buffer)
 		_server->deleteClient(this);
 	}
 	if (command.substr(0,5) == "PART "){
-		std::string target = command.substr(command.find("#"), command.find(":") - 2);
-		std::cout << command << std::endl;
-		//flemme
+		std::string target = command.substr(command.find("#"), command.find(" "));
+		std::cout << target << std::endl;
+		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+			if (target == (*it)->getName()){
+				std::cout << "KIKOUPOUET\n";
+				
+				std::cout << RPL_PART(getPrefix(), (*it)->getName());
+				(*it)->broadcast(RPL_PART(getPrefix(), (*it)->getName()));
+				(*it)->deleteUser(this);
+			}
+		}
 	}
 
 }

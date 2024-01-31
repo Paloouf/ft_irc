@@ -43,7 +43,7 @@ class Channel{
 		bool			_l;
 		bool			_k;
 		std::string		_topic;
-		int				_limit;
+		long unsigned int				_limit;
 
 		Client*			_creator;
 		std::vector<Client*> 	_admins;

@@ -15,36 +15,37 @@ Channel::~Channel(){}
 
 
 void Channel::join(Client* client){
-    std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-    std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
-    send(client->getFd(), join.c_str(), join.size(), 0);
-    if (!_topic.compare(""))
-    {
-        std::string topic = RPL_NOTOPIC(client->getNick(), this->getName());
-        send(client->getFd(), topic.c_str(), topic.size(), 0);
+    if (!_l || _limit >= _clients.size() + 1){
+        std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
+        std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
+        send(client->getFd(), join.c_str(), join.size(), 0);
+        if (!_topic.compare(""))
+        {
+            std::string topic = RPL_NOTOPIC(client->getNick(), this->getName());
+            send(client->getFd(), topic.c_str(), topic.size(), 0);
+        }
+        else{
+            std::string topic = RPL_TOPIC(client->getNick(), this->getName(), this->getTopic());
+            send(client->getFd(), topic.c_str(), topic.size(), 0);
+        }
+        _clients.push_back(client);
+        client->getChan().push_back(this);
+        std::string names;
+        for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+            for(std::vector<Client*>::iterator itt = _admins.begin(); itt != _admins.end(); itt++){
+                if ((*itt)->getFd() == (*it)->getFd()){
+                    names += "@";
+                    //it++;
+                }
+            }
+            names += (*it)->getNick() + " ";
+        }
+        std::string userlist = RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str());
+        send(client->getFd(), userlist.c_str(), userlist.size(), 0);
+        std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
+        send(client->getFd(), endofnames.c_str(), endofnames.size(), 0);
+        std::cout << join << userlist << endofnames << std::endl;
     }
-    else{
-        std::string topic = RPL_TOPIC(client->getNick(), this->getName(), this->getTopic());
-        send(client->getFd(), topic.c_str(), topic.size(), 0);
-    }
-    _clients.push_back(client);
-    client->getChan().push_back(this);
-    std::string names;
-    for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-	for(std::vector<Client*>::iterator itt = _admins.begin(); itt != _admins.end(); itt++){
-		if ((*itt)->getFd() == (*it)->getFd()){
-			names += "@";
-			//it++;
-		}
-	}
-        names += (*it)->getNick() + " ";
-    }
-    std::string userlist = RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str());
-    send(client->getFd(), userlist.c_str(), userlist.size(), 0);
-    std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
-    send(client->getFd(), endofnames.c_str(), endofnames.size(), 0);
-
-	std::cout << join << userlist << endofnames << std::endl;
     //Need to make more functions to send /PRIVMSGS to other clients in the channel, set Topic with /TOPIC
 }
 
@@ -68,7 +69,6 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 		}
 	}
 }
-
 
 void	Channel::broadcast(std::string message)
 {
@@ -127,38 +127,91 @@ void    Channel::parseMode(Client *client, std::string target, std::string buff)
 }
 
 void    Channel::removeMode(Client *client,std::string del, std::vector<std::string> params){
-	for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); it++){
-		std::string param = (*it);
-		if (this->isAdmin(client)){
-			if (del.find("i") != std::string::npos)
-			_i = false;
-			if (del.find("t") != std::string::npos)
-			_t = false;
-			if (del.find("k") != std::string::npos){
-				_k = false;
-				broadcast(RPL_REMPASS(client->getPrefix(), getName()));
-			}
-			if (del.find("o") != std::string::npos){
-			std::cout << "Removed operator privileges for : " << param << std::endl;
-			std::string msg = param + "\n";
-			for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-				if ((*it)->getNick() + "\n" == param || (*it)->getNick() == param){
-				if (this->isAdmin((*it)) && _admins.size() > 1 && client->getNick() != param){
-					std::remove(_admins.begin(), _admins.end(), (*it));
-					_admins.pop_back();
-					std::cout << "minou\n";
-					sendMode(client, getName(), "-o", msg);
-					//broadcast(RPL_REMOP(client->getPrefix(), getName(), msg));
-				}
-				else
-					std::cout << (*it)->getNick() << " is not admin\n";
-				}
-			} 
-			}
-			if (del.find("l") != std::string::npos)
-			_l = false;
-		}
-	}
+    int size = params.size();
+    if (size > 0){
+        params.back().resize(params.back().size() - 1);
+    }
+    char c;
+    int i = 0;
+    if (size > 0){
+        std::vector<std::string>::iterator it = params.begin();
+        while ((c = del[i])){
+            switch(c){
+                case 'i':{
+                    _i = false;
+                    broadcast(RPL_REMINV(client->getPrefix(), getName()));
+                    break;
+                }
+                case 'l':{
+                    _l = false;
+                    broadcast(RPL_REMLIM(client->getPrefix(), getName()));
+                    break;
+                }
+                case 'o':{
+                    std::string msg = (*it);
+                    for (int j = 0; j < size; j++){
+                        for(std::vector<Client*>::iterator itt = _clients.begin(); itt != _clients.end(); itt++){
+                            if ((*itt)->getNick() == (*it)){
+                                if (this->isAdmin((*itt)) && _admins.size() > 1 && client->getNick() != (*it)){
+                                    std::remove(_admins.begin(), _admins.end(), (*itt));
+	 				                _admins.pop_back();
+                                    broadcast(RPL_REMOP(client->getPrefix(), getName(), msg));
+                                }
+                            }
+                        }
+                        it++;
+                    }
+                    break;
+                }
+                case 'k':{
+                    _k = false;
+                    broadcast(RPL_REMPASS(client->getPrefix(), getName()));
+                    break;
+                }
+                case 't':{
+                    _t = false;
+                    broadcast(RPL_REMTOP(client->getPrefix(), getName()));
+                    break;
+                }
+                default:
+                    break;
+            }
+            i++;
+        }
+    }
+    else{
+        while ((c = del[i])){
+            switch(c){
+                case 'i':{
+                    _i = false;
+                    broadcast(RPL_REMINV(client->getPrefix(), getName()));
+                    break;
+                }
+                case 'l':{
+                    _l = false;
+                    broadcast(RPL_REMLIM(client->getPrefix(), getName()));
+                    break;
+                }
+                case 'o':{
+                    std::cout << "Mode -o, missing operator names\n";
+                    break;
+                }
+                case 'k':{
+                    _k = false;
+                    broadcast(RPL_REMPASS(client->getPrefix(), getName()));
+                    break;
+                }
+                case 't':{
+                    _t = false;
+                    broadcast(RPL_REMTOP(client->getPrefix(), getName()));
+                    break;
+                }
+                default:
+                    break;
+            }
+            i++;
+        }
+    }
 }
 
 bool    Channel::isAdmin(Client* client){
@@ -204,59 +257,99 @@ void    Channel::addMode(Client *client,std::string add, std::vector<std::string
     i = 0;
     if (size > 0){
         std::vector<std::string>::iterator it = params.begin();
-    while ((c = add[i]))
-    {  
-        switch(c){
-            case 'k':{
-                std::cout << "Mode K\n";
-                setPass((*it));
-                broadcast(RPL_ADDPASS(client->getPrefix(), getName(), (*it)));
-                it++;
-                break;
-            }
-            case 'o':{
-                std::cout << "Mode O\n";
-                std::string msg = (*it) + "\n";
-                for (int j = 0; j < size - l - k; j++){
-                    for(std::vector<Client*>::iterator itt = _clients.begin(); itt != _clients.end(); itt++){
-                        if ((*itt)->getNick() == (*it)){
-                            if (!this->isAdmin((*itt))){
-                                _admins.push_back((*itt));
-                                broadcast(RPL_ADDOP(client->getPrefix(), getName(), msg));
+        while ((c = add[i]))
+        {  
+            switch(c){
+                case 'k':{
+                    std::cout << "Mode K\n";
+                    setPass((*it));
+                    broadcast(RPL_ADDPASS(client->getPrefix(), getName(), (*it)));
+                    it++;
+                    break;
+                }
+                case 'o':{
+                    std::cout << "Mode O\n";
+                    std::string msg = (*it);
+                    for (int j = 0; j < size - l - k; j++){
+                        for(std::vector<Client*>::iterator itt = _clients.begin(); itt != _clients.end(); itt++){
+                            if ((*itt)->getNick() == (*it)){
+                                if (!this->isAdmin((*itt))){
+                                    _admins.push_back((*itt));
+                                    broadcast(RPL_ADDOP(client->getPrefix(), getName(), msg));
+                                }
                             }
                         }
+                        it++;
                     }
+                    break;
+                }
+                case 'i':{
+                    if (!_i){
+                        std::cout << "Mode i\n";
+                        broadcast(RPL_ADDINV(client->getPrefix(), getName()));
+                        _i = true;
+                    }
+                    break;
+                }
+                case 'l':{
+                    std::cout << "Mode l " << (*it) << "\n";
+                    setLimit(client, (*it));
                     it++;
+                    _l = true;
+                    break;
                 }
-                break;
-            }
-            case 'i':{
-                if (!_i){
-                    std::cout << "Mode i\n";
-                    broadcast(RPL_ADDINV(client->getPrefix(), getName()));
-                    _i = true;
+                case 't':{
+                    if (!_t){
+                        std::cout << "Mode t\n";
+                        broadcast(RPL_ADDTOP(client->getPrefix(), getName()));
+                        _t = true;
+                    }
+                    break;
                 }
-                break;
+                default:
+                    break;
             }
-            case 'l':{
-                std::cout << "Mode l " << (*it) << "\n";
-                setLimit(client, (*it));
-                it++;
-                break;
-            }
-            case 't':{
-                if (!_t){
-                    std::cout << "Mode t\n";
-                    _t = true;
-                }
-                break;
-            }
-            default:{
-                break;
-            }
+            i++;
         }
-        i++;
     }
+    else{
+        while ((c = add[i]))
+        {  
+            switch(c){
+                case 'k':{
+                    std::cout << "Missing pass for mode k\n";
+                    break;
+                }
+                case 'o':{
+                    std::cout << "Missing operator names\n";
+                    break;
+                }
+                case 'i':{
+                    if (!_i){
+                        std::cout << "Mode i\n";
+                        broadcast(RPL_ADDINV(client->getPrefix(), getName()));
+                        _i = true;
+                    }
+                    break;
+                }
+                case 'l':{
+                    std::cout << "Missing limit argument\n";
+                    break;
+                }
+                case 't':{
+                    if (!_t){
+                        std::cout << "Mode t\n";
+                        broadcast(RPL_ADDTOP(client->getPrefix(), getName()));
+                        _t = true;
+                    }
+                    break;
+                }
+                default:{
+                    break;
+                }
+            }
+            i++;
+        }
     }
 }
 
@@ -284,7 +377,9 @@ void	Channel::deleteUser(Client *client)
 	{
 		if (_admins[i]->getFd() == client->getFd())
 		{
-			_admins.erase(_admins.begin() + i);
+           
+			_admins.erase(_admins.begin() + i); 
+            std::cout << "kikouette " << _admins.size() << std::endl;
 			i = 0;
 		}
 	}
@@ -293,13 +388,16 @@ void	Channel::deleteUser(Client *client)
 		if (_clients[i]->getFd() == client->getFd())
 		{
 			_clients.erase(_clients.begin() + i);
+            std::cout << "pipouette " << _clients.size() << std::endl;
 			i = 0;
 		}
 	}
 	if (_clients.size() > 0 && _admins.size() == 0)
 	{
 		_admins.push_back(_clients[0]);
-        broadcast(RPL_ADDOP(client->getPrefix(), getName(), _clients[0]->getNick()));
+        std::string servname = "EasyRC.gg";
+        std::cout << "cacamou1 " << RPL_ADDOP(servname, getName(), _clients[0]->getNick());
+        broadcast(RPL_ADDOP(servname, getName(), _clients[0]->getNick()));
 		//need to add sendmsg fonction for tell at all client the new admin in chan
 	}
 }
