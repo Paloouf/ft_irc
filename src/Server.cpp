@@ -173,24 +173,20 @@ void	Server::deleteClient(Client* client)
 {
 
 	int i = 0;
-	//std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
-	// while (ite != _chanMap.end())
-	// {
-	// 	ite->second->deleteUser(client);
-	// 	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-	// 	std::string quit = ":" + prefix + " QUIT : Quit: Bye for now!\r\n";
-	// 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
-	// 	{
-	// 		send((*it)->getFd(), quit.c_str(), quit.size(), 0);
-	// 	}
-	// 	if ((*ite->second).getClient().empty())
-	// 	{
-	// 		delete ite->second;
-	// 		_chanMap.erase(ite);
-	// 		ite = _chanMap.begin();
-	// 	}
-	// 	ite++;
-	// }
+	std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
+	while (ite != _chanMap.end())
+	{
+		ite->second->deleteUser(client);
+		std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
+		std::string quit = ":" + prefix + " QUIT : Quit: Bye for now!\r\n";
+		if (!_chanMap.empty() && !(*ite->second).getClient().empty()){
+			for(std::vector<Client*>::iterator it = (*ite->second).getClient().begin(); it != (*ite->second).getClient().end(); it++)
+				send((*it)->getFd(), quit.c_str(), quit.size(), 0);
+		}
+		else
+			break;
+		ite++;
+	}
 	std::vector<Client*>::iterator it = _clients.begin();
 	i = 0;
 	while((*it)->getFd() != client->getFd())
@@ -223,15 +219,11 @@ void	Server::receiveData(Client *client){
 void	Server::checkChannel(Client *client, std::string buffer){
 	if (_chanMap.find(buffer) != _chanMap.end())
 	{
-		//Need to RPL to join chan + topic if any + client list
-		//Need to add client to vector of channel
 		_chanMap[buffer]->join(client);
 		_chanMap[buffer]->update(client);
-		//std::cout << buffer << "pipou\n";
 	}
 	else{
 		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
-		//Need to send RPL_channel created for Konversation to create a chan
 	}
 }
 
