@@ -378,7 +378,7 @@ void	Channel::deleteUser(Client *client)
 		if (_admins[i]->getFd() == client->getFd())
 		{
            
-			_admins.erase(_admins.begin() + i); 
+			_admins.erase(_admins.begin() + i);
             std::cout << "kikouette " << _admins.size() << std::endl;
 			i = 0;
 		}
@@ -387,6 +387,7 @@ void	Channel::deleteUser(Client *client)
 	{
 		if (_clients[i]->getFd() == client->getFd())
 		{
+            client->deleteChan(this);
 			_clients.erase(_clients.begin() + i);
             std::cout << "pipouette " << _clients.size() << std::endl;
 			i = 0;

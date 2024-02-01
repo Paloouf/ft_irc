@@ -195,19 +195,48 @@ void	Client::parseMsg(char *buffer)
 		std::cout << target << std::endl;
 		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
 			if (target.find((*it)->getName()) != std::string::npos){
-				std::cout << "KIKOUPOUET\n";
-				
 				std::cout << RPL_PART(getPrefix(), (*it)->getName());
 				(*it)->broadcast(RPL_PART(getPrefix(), (*it)->getName()));
 				(*it)->deleteUser(this);
+				if (_chan.size() == 0)
+					break;
+				else
+					it = _chan.begin();
+				std::cout << "KIKOUPOUET\n";
 			}
 		}
 	}
 	if (command.substr(0,5) == "KICK ")
 	{
-		std::string target = command.substr(command.find("#"), command.find(":") - 5);
+		std::string target = command.substr(command.find("#"));
 		std::cout << target << std::endl;
-				std::cout << "KIKOUPOUET\n";
+		std::stringstream buff;
+		buff << target;
+		std::string	user, cible, channel;
+		buff >> channel >> cible;
+		user = this->getNick();
+		std::cout << "user:" << user << " chan: " << channel << " cible:" << cible << std::endl;
+		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+			if (channel == (*it)->getName()){
+				if ((*it)->isAdmin(this))
+				{
+					std::vector<Client*>::iterator itt = (*it)->getClient().begin();
+					while (itt != (*it)->getClient().end())
+					{
+						if (cible == (*itt)->getNick())
+						{
+							(*it)->broadcast(RPL_KICK(this->getPrefix(), (*it)->getName(), (*itt)->getNick()));
+							(*it)->deleteUser(*itt);
+							std::cout << "on broadcast: " << RPL_KICK(getPrefix(), (*it)->getName(), (*itt)->getNick());
+							itt = (*it)->getClient().begin();
+						}
+						itt++;
+					}
+				}
+				else
+					std::cout << "This Client is not admin\n";
+			}
+		}
 	}
 
 }
@@ -262,7 +291,6 @@ bool		Client::checkDoubleUser(const char* user)
 	return true;
 }
 
-
 void	Client::sendWelcome()
 {
 	std::string message = RPL_WELCOME(getNick(), getFullName());
@@ -279,3 +307,18 @@ void	Client::sendWelcome()
 	std::cout << "Responding to client " << getFd() << " with message " << message;
 	std::cout << "Successfully registered client " << getHostname() << std::endl << std::endl;
 }
+
+void	Client::deleteChan(Channel *channel)
+{
+	for (unsigned i = 0; i < _chan.size(); i++)
+	{
+		std::vector<Channel*>::iterator	it = _chan.begin() + i;
+		if (channel == (*it))
+		{
+			_chan.erase(_chan.begin() + i);
+            std::cout << "delChan" << _chan.size() << std::endl;
+			i = 0;
+		}
+	}
+}
+

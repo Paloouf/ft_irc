@@ -22,7 +22,7 @@
 #define RPL_INVITING(prefix, nick, target)      ":" + prefix + " " + nick + " " + target + "\n"
 #define RPL_JOIN(prefix, target)	            ":" + prefix + " JOIN " + target + "\n"
 #define RPL_PART(prefix, target)	            ":" + prefix + " PART " + target + "\n"
-
+#define RPL_KICK(prefix, channel, target)                ":" + prefix + " KICK " + channel + " " + target + "\n"
 
 //MODES
 #define RPL_ADDOP(prefix, target, msg)		    ":" + prefix + " MODE " + target + " +o " + msg + "\n"

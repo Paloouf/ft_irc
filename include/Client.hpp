@@ -40,6 +40,7 @@ class Client{
 		void	setUser(const std::string user){this->_user = user;}
 		void	setHost(const std::string hostname){this->_hostname = hostname;}
 		void	setFullName(const std::string fullName){this->_fullName = fullName;}
+		void	deleteChan(Channel *channel);
 		bool	checkNick(std::string nick);
 		bool	checkDoubleNick(std::string nick);
 		bool	checkDoubleUser(const char* user);
