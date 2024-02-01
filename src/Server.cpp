@@ -174,14 +174,15 @@ void	Server::deleteClient(Client* client)
 
 	int i = 0;
 	std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
-	while (ite != _chanMap.end())
+	while (_chanMap.size() > 0 && ite != _chanMap.end())
 	{
 		ite->second->deleteUser(client);
 		std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
 		std::string quit = ":" + prefix + " QUIT : Quit: Bye for now!\r\n";
 		for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
 		{
-			send((*it)->getFd(), quit.c_str(), quit.size(), 0);
+			if ((*it)->getFd() != client->getFd())
+				send((*it)->getFd(), quit.c_str(), quit.size(), 0);
 		}
 		if ((*ite->second).getClient().empty())
 		{

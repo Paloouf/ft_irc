@@ -11,7 +11,9 @@ Channel::Channel(Server *server, std::string name, Client* client) :_server(serv
     _t = false;
     _o = false;
 }
-Channel::~Channel(){}
+Channel::~Channel(){
+    std::cout << "Destructor of channel called!\n";
+}
 
 
 void Channel::join(Client* client){
@@ -29,6 +31,8 @@ void Channel::join(Client* client){
             send(client->getFd(), topic.c_str(), topic.size(), 0);
         }
         _clients.push_back(client);
+        if (_admins.size() == 0)
+            _admins.push_back(client);
         client->getChan().push_back(this);
         std::string names;
         for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){

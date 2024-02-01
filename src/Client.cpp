@@ -226,16 +226,22 @@ void	Client::parseMsg(char *buffer)
 						if (cible == (*itt)->getNick())
 						{
 							(*it)->broadcast(RPL_KICK(this->getPrefix(), (*it)->getName(), (*itt)->getNick()));
-							(*it)->deleteUser(*itt);
 							std::cout << "on broadcast: " << RPL_KICK(getPrefix(), (*it)->getName(), (*itt)->getNick());
+							(*it)->deleteUser(*itt);
+							if ((*it)->getClient().size() == 0)
+								return;
 							itt = (*it)->getClient().begin();
 						}
+						else
+							std::cout << "pipounet" << std::endl;
 						itt++;
 					}
 				}
 				else
 					std::cout << "This Client is not admin\n";
 			}
+			if (_chan.size() == 0)
+				return;
 		}
 	}
 
