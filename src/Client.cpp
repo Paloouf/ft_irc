@@ -200,6 +200,8 @@ void	Client::parseMsg(char *buffer)
 				std::cout << RPL_PART(getPrefix(), (*it)->getName());
 				(*it)->broadcast(RPL_PART(getPrefix(), (*it)->getName()));
 				(*it)->deleteUser(this);
+				// std::remove(_chan.begin(), _chan.end(), (*it));
+				// _chan.pop_back();
 			}
 		}
 	}

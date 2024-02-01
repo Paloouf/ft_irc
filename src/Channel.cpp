@@ -4,14 +4,18 @@ Channel::Channel(Server *server, std::string name, Client* client) :_server(serv
     std::cout << "New Channel " << _name << " created by client[" << _creator->getFd() << "]\n";
     setTopic("");
     _admins.push_back(client);
-    this->join(client);
     _l = false;
     _k = false;
     _i = false;
     _t = false;
     _o = false;
+    _limit = 0;
+    this->join(client);
+    
 }
-Channel::~Channel(){}
+Channel::~Channel(){
+	std::cout << "Channel '" << getName() << "' destroyed\n";
+}
 
 
 void Channel::join(Client* client){
@@ -399,6 +403,10 @@ void	Channel::deleteUser(Client *client)
         std::cout << "cacamou1 " << RPL_ADDOP(servname, getName(), _clients[0]->getNick());
         broadcast(RPL_ADDOP(servname, getName(), _clients[0]->getNick()));
 		//need to add sendmsg fonction for tell at all client the new admin in chan
+	}
+	if (_clients.size() == 0){
+		std::cout << "MIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM\n";
+		getServer()->deleteChannel(getName());
 	}
 }
 

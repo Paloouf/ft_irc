@@ -13,8 +13,9 @@ class Channel{
 		~Channel();
 
 
-    std::vector<Client*>	&getClient(){return _clients;}
-    std::vector<Client*>	&getAdmins(){return _admins;}
+		std::vector<Client*>	&getClient(){return _clients;}
+		std::vector<Client*>	&getAdmins(){return _admins;}
+		Server*		getServer() {return _server;}
 		std::string getName()const {return _name;}
 		std::string getTopic() const {return _topic;}
 		std::string getPass() const {return _pass;}
