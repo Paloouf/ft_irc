@@ -194,7 +194,7 @@ void	Client::parseMsg(char *buffer)
 		std::string target = command.substr(command.find("#"));
 		std::cout << target << std::endl;
 		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
-			if (target.find((*it)->getName()) != std::string::npos){
+			if (target.find(((*it)->getName() + " ")) != std::string::npos){
 				std::cout << RPL_PART(getPrefix(), (*it)->getName());
 				(*it)->broadcast(RPL_PART(getPrefix(), (*it)->getName()));
 				(*it)->deleteUser(this);
