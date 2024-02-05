@@ -31,6 +31,7 @@ class Server{
 		Server(std::string port, std::string password);
 		void					checkInput();
 		void					deleteClient(Client* client);
+		void					deleteChannel(std::string);
 		void					checkChannel(Client* client, std::string buffer);
 		void					whoReply(Client* client, char* buffer);
 		void					replyChannel(Client* client, char* buffer);

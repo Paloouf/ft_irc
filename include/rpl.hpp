@@ -19,10 +19,21 @@
 #define ERR_ALREADYREGISTERED(client)                                                           "462 " + client + " :You may not reregister\n"
 #define ERR_PASSWDMISMATCH(client)                                                              "464 " + client + " :Password incorrect\n"
 #define NEW_NICK(old, newnick)    ":" + old + " NICK " + newnick + "\n"
+#define RPL_INVITING(prefix, nick, target) ":" + prefix + " " + nick + " " + target + "\n"
+#define RPL_JOIN(prefix, target)	":" + prefix + " JOIN " + target + "\n"
+#define RPL_PART(prefix, target)	":" + prefix + " PART " + target + "\n"
+
 
 //MODES
-#define RPL_ADDOP(prefix, target, msg)		":" + prefix + " MODE " + target + " +o " + msg
-#define RPL_REMOP(prefix, target, msg)   	":" + prefix + " MODE " + target + " -o " + msg
-#define RPL_NEWPASS(prefix, target, msg)	":" + prefix + " MODE " + target + " +k " + msg + "\n"
-#define RPL_REMPASS(prefix, target)	":" + prefix + " MODE " + target + " -k\n"
+
+#define RPL_ADDOP(prefix, target, msg)		":" + prefix + " MODE " + target + " +o " + msg + "\n"
+#define RPL_REMOP(prefix, target, msg)   	":" + prefix + " MODE " + target + " -o " + msg + "\n"
+#define RPL_ADDPASS(prefix, target, msg)	":" + prefix + " MODE " + target + " +k " + msg + "\n"
+#define RPL_REMPASS(prefix, target)	        ":" + prefix + " MODE " + target + " -k\n"
+#define RPL_ADDLIMIT(prefix, target, limit) ":" + prefix + " MODE " + target + " +l " + limit + "\n" 
+#define RPL_REMLIM(prefix, target)			":" + prefix + " MODE " + target + " -l\n"
+#define RPL_ADDINV(prefix, target)          ":EasyRC.gg MODE " + target + " +i\n"
+#define RPL_REMINV(prefix, target)			":EasyRC.gg MODE " + target + " -i\n"
+#define RPL_ADDTOP(prefix, target)			":" + prefix + " MODE " + target + " +t\n"
+#define RPL_REMTOP(prefix, target)			":" + prefix + " MODE " + target + " -t\n"
 

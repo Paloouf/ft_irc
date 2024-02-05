@@ -23,3 +23,4 @@
 #include <cstring>
 #include "Error.hpp"
 #include <algorithm>
+#include <cerrno>

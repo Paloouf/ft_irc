@@ -179,16 +179,12 @@ void	Server::deleteClient(Client* client)
 		ite->second->deleteUser(client);
 		std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
 		std::string quit = ":" + prefix + " QUIT : Quit: Bye for now!\r\n";
-		for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
-		{
-			send((*it)->getFd(), quit.c_str(), quit.size(), 0);
+		if (!_chanMap.empty() && !(*ite->second).getClient().empty()){
+			for(std::vector<Client*>::iterator it = (*ite->second).getClient().begin(); it != (*ite->second).getClient().end(); it++)
+				send((*it)->getFd(), quit.c_str(), quit.size(), 0);
 		}
-		if ((*ite->second).getClient().empty())
-		{
-			delete ite->second;
-			_chanMap.erase(ite);
-			ite = _chanMap.begin();
-		}
+		else
+			break;
 		ite++;
 	}
 	std::vector<Client*>::iterator it = _clients.begin();
@@ -215,13 +211,7 @@ void	Server::receiveData(Client *client){
 		return;
 	}
 	buffer[err] = '\0';
-	if (err == 0 && client->getCommand().size() == 0)
-	{
-		deleteClient(client);
-		std::cout << "client disconnected\n";
-	}
-	else
-		client->parseBuffer(buffer);
+	client->parseBuffer(buffer);
 }
 
 //CHANNEL CHECK//
@@ -229,15 +219,11 @@ void	Server::receiveData(Client *client){
 void	Server::checkChannel(Client *client, std::string buffer){
 	if (_chanMap.find(buffer) != _chanMap.end())
 	{
-		//Need to RPL to join chan + topic if any + client list
-		//Need to add client to vector of channel
 		_chanMap[buffer]->join(client);
 		_chanMap[buffer]->update(client);
-		//std::cout << buffer << "pipou\n";
 	}
 	else{
 		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
-		//Need to send RPL_channel created for Konversation to create a chan
 	}
 }
 
@@ -245,4 +231,9 @@ void	Server::broadcast(std::string message)
 {
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
 		send((*it)->getFd(), message.c_str(), message.size(), 0);
+}
+
+void	Server::deleteChannel(std::string name){
+	delete _chanMap[name];
+	_chanMap.erase(name);
 }

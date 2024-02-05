@@ -8,7 +8,7 @@ Client::Client(Server *server, int fd, std::string hostname, int port) :_server(
 }
 
 Client::~Client(){
-	std::cout << "Client dead\n";
+	std::cout << "Client destructor called\n";
 }
 
 Client& Client::operator=(const Client& ref){
@@ -30,6 +30,11 @@ void	Client::resetBuffer()
 
 void	Client::parseBuffer(char * buffer)
 {
+	std::string command = buffer;
+	if (command.substr(0,5) == "QUIT "){
+		std::cout << "cacaprout\n";
+		getServer()->deleteClient(this);
+	}
 	if (_negoCount < 4)
 	{
 		try
@@ -78,7 +83,7 @@ void	Client::parseNego(char *buffer)
 	std::string			message;
 	while (getline(sBuff, command))
 	{
-		std::cerr << "Negotiation step : Message from client " << getFd() << " : " << buffer;
+		std::cerr << "Negotiation step : Message from client " << getFd() << " : " << command << std::endl;
 		if (command.size() > 3 && command.substr(0,3) == "CAP" && getNego() == 0)
 		{
 			message = "CAP * LS :\n";
@@ -138,7 +143,7 @@ void	Client::setPrefix(){
 void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
-	std::cout << "MSG:" << command << std::endl;
+	std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
 	std::string	message;
 	if (command.size() > 4 && command.substr(0,5) == "PING ")
 	{	
@@ -186,6 +191,25 @@ void	Client::parseMsg(char *buffer)
 			}
 		}
 	}
+	if (command.substr(0,5) == "QUIT ")
+	{
+		_server->deleteClient(this);
+	}
+	if (command.substr(0,5) == "PART "){
+		std::string target = command.substr(command.find("#"), command.find(" "));
+		std::cout << target << std::endl;
+		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+			if (target == (*it)->getName()){
+				(*it)->broadcast(RPL_PART(getPrefix(), (*it)->getName()));
+				std::remove(_chan.begin(), _chan.end(), (*it));
+				_chan.pop_back();
+				(*it)->deleteUser(this);
+				break;
+				
+			}
+		}
+	}
+
 }
 
 std::string	Client::getFirstChannel() const
@@ -242,9 +266,15 @@ bool		Client::checkDoubleUser(const char* user)
 void	Client::sendWelcome()
 {
 	std::string message = RPL_WELCOME(getNick(), getFullName());
+	if (fcntl(getFd(), F_GETFD) < 0){
+				std::cout << "Probleme ici\n";
+	}
 	send(getFd(), message.c_str(), message.size(), 0);
 	std::cout << "Responding to client " << getFd() << " with message " << message;
 	message = RPL_YOURHOST(getNick());
+	if (fcntl(getFd(), F_GETFD) < 0){
+				std::cout << "Probleme ici\n";
+	}
 	send(getFd(), message.c_str(), message.size(), 0);
 	std::cout << "Responding to client " << getFd() << " with message " << message;
 	message = RPL_CREATED(getNick(), _server->getDate());
