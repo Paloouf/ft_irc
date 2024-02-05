@@ -19,9 +19,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
-
+#include <algorithm>
+#include <cerrno>
 #include "Error.hpp"
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "rpl.hpp"
 #include "Server.hpp"
+

@@ -43,10 +43,12 @@ class Server{
 		void							replyUser(Client* client, char* buffer);
 		void							whoReply(Client* client, char* buffer);
 		void							replyChannel(Client* client, char* buffer);
+    void					    deleteChannel(std::string);
 		void							checkChannel(Client* client, std::string buffer);
 		std::string 					getDate(){return _date;}
 		std::string 					getPort(){return _port;}
 		std::string 					getPassword(){return _password;}
 		std::vector<Client*>			&getClient(){return _clients;}
 		std::map<std::string, Channel*>	&getChan(){return _chanMap;}
+
 };
