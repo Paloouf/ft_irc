@@ -71,8 +71,7 @@ void	Channel::sendMsg(Client *client, std::string target, std::string msg){
 void	Channel::broadcast(std::string message)
 {
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-		//std::cout << "PROUTOS\n";
-		client->sendBuffer(message);
+		(*it)->sendBuffer(message);
 	}
 }
 

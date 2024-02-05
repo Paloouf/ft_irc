@@ -1,6 +1,6 @@
 #include "../include/Client.hpp"
 
-Client::Client(Server *server, int fd, std::string hostname, int port) :_server(server), _fd(fd), _port(port),_hostname(hostname){
+Client::Client(Server *server, int fd, std::string hostname, int port) :_server(server), _fd(fd), _port(port),_send(""),_hostname(hostname){
 	std::cout << &_server << "Test client, fd: " << this->getFd() << ", hostname: " << this->getHostname() << std::flush;
 	std::cout << ", port: " << this->getPort() << std::endl << std::endl;
 	this->resetBuffer();	
@@ -270,7 +270,7 @@ void	Client::changeTopic(std::string command)
 	std::stringstream	parse(command);
 	std::string			argument;
 	std::string			message;
-	getline(parse, argument, ' ')
+	getline(parse, argument, ' ');
 	std::cout << "Get topic request from client " << getFd() << " : " << command << std::endl;
 	if(getServer()->getChan().find(argument) == getServer()->getChan().end())
 	{

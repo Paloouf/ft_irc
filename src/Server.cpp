@@ -119,10 +119,11 @@ void	Server::waitInput(){
 		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
 	{
-		if (i != 0 && !_clients[i]->getSend().empty())
+		if (i != 0 && !_clients[i - 1]->getSend().empty())
 		{
-			send(_clients[i]->getFd(), _clients[i]->getSend().c_str(), _clients[i]->getSend().size(), 0);
-
+			std::cout << "here\n";
+			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
+			_clients[i - 1]->resetSend();
 		}
 		else if (_clientsFd[i].revents != 0)
 		{
