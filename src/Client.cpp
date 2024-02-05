@@ -82,7 +82,7 @@ void	Client::parseNego(char *buffer)
 		if (command.size() > 3 && command.substr(0,3) == "CAP" && getNego() == 0)
 		{
 			message = "CAP * LS :\n";
-			send(getFd(), message.c_str(), message.size(), 0);
+			sendBuffer(message);
 			std::cout << "Responding to client " << getFd() << " with message " << message;
 			setNego(1);
 		}
@@ -93,13 +93,13 @@ void	Client::parseNego(char *buffer)
 			{
 				message = ERR_NEEDMOREPARAMS(getHostname(), "PASS");
 				std::cout << "Responding to client " << getFd() << " with message " << message;
-				send(getFd(), message.c_str(), message.size(), 0);
+				sendBuffer(message);
 			}
 			if (command != "PASS :" + _server->getPassword())
 			{
 				message = ERR_PASSWDMISMATCH(getHostname());
 				std::cout << "Responding to client " << getFd() << " with message " << message ;
-				send(getFd(), message.c_str(), message.size(), 0);
+				sendBuffer(message);
 				throw Error::wrongPassword();
 			}
 			setNego(2);
@@ -140,47 +140,17 @@ void	Client::parseMsg(char *buffer)
 	std::string command = buffer;
 	std::cout << "MSG:" << command << std::endl;
 	std::string	message;
-	if (command.size() > 4 && command.substr(0,4) == "PING")
-	{	
-		std::cout << "Getting Ping request from client " << getFd() << std::endl;
-		message = "PONG " + command.substr(5) + "\n";
-		std::cout << "Responding to ping request from client " << getFd() << " with message " << message << std::endl;
-		send(getFd(), message.c_str(), message.size(), 0);
-	}
-	if (command.size() > 4 && command.substr(0,4) == "JOIN")
-	{
+	if (command.size() > 4 && command.substr(0,5) == "PING ")
+		pongReply(command.substr(5));
+	if (command.size() > 4 && command.substr(0,5) == "JOIN ")
     	getServer()->checkChannel(this, command.substr(5, command.size() - 6));
-	}
-	if (command.size() > 3 && command.substr(0,3) == "WHO")
+	if (command.size() > 3 && command.substr(0,4) == "WHO ")
 		getServer()->whoReply(this, buffer);
-	if (command.size() > 4 && command.substr(0,4) == "NICK")
-	{
-		if(checkNick(command.substr(5)) && checkDoubleNick(command.substr(5)))
-		{
-			message = NEW_NICK(getNick(), command.substr(5));
-			std::cout << "Sending nickname change broadcast : " << message;
-			getServer()->broadcast(message);
-			setNick(command.substr(5));
-		}
-	}
-	if (command.size() > 4 && command.substr(0,4) == "USER")
-	{
-		if(checkDoubleUser(command.substr(5).c_str()))
-			setUser(command.substr(5));
-  }
-	if (command.substr(0,7) == "PRIVMSG")
-	{
-		char* commandbis = &command[8];
-		std::string target = strtok(commandbis, " ");
-		if (target[0] == '#'){
-			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
-				if ((*it)->getName() == target){
-					(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
-				}
-			}
-		}
-	}
-	if(command.substr(0,4) == "MODE"){
+	if (command.size() > 4 && command.substr(0,5) == "NICK ")
+		changeNick(command.substr(5));
+	if (command.substr(0,8) == "PRIVMSG ")
+		privMsg(command);
+	if(command.substr(0,5) == "MODE "){
 		char* commandbis = &command[5];
 		std::string target = strtok(commandbis, " ");
 		if (target[0] == '#'){
@@ -191,6 +161,8 @@ void	Client::parseMsg(char *buffer)
 			}
 		}
 	}
+	if(command.substr(0,7) == "TOPIC #")
+		changeTopic(command.substr(6));
 }
 
 std::string	Client::getFirstChannel() const
@@ -207,7 +179,7 @@ bool		Client::checkNick(std::string nick)
 	{
 		std::cout << nick << std::endl;
 		message = ERR_ERRONEUSNICKNAME(getHostname(), nick);
-		send(getFd(), message.c_str(), message.size(), 0);
+		sendBuffer(message);
 		return false;
 	}	
 	return true;
@@ -221,7 +193,7 @@ bool		Client::checkDoubleNick(std::string nick)
 		if((*it)->getNick() == nick)
 		{
 			message = ERR_NICKNAMEINUSE(getHostname(),nick);
-			send(getFd(), message.c_str(), message.size(), 0);
+			sendBuffer(message);
 			return false;
 		}
 	}
@@ -236,7 +208,7 @@ bool		Client::checkDoubleUser(const char* user)
 		if((*it)->getUser() == user)
 		{				
 			message = ERR_ALREADYREGISTERED(getHostname());
-			send(getFd(), message.c_str(), message.size(), 0);
+			sendBuffer(message);
 			return false;
 		}
 	}
@@ -247,16 +219,73 @@ bool		Client::checkDoubleUser(const char* user)
 void	Client::sendWelcome()
 {
 	std::string message = RPL_WELCOME(getNick(), getFullName());
-	send(getFd(), message.c_str(), message.size(), 0);
+	sendBuffer(message);
 	std::cout << "Responding to client " << getFd() << " with message " << message;
 	message = RPL_YOURHOST(getNick());
-	send(getFd(), message.c_str(), message.size(), 0);
+	sendBuffer(message);
 	std::cout << "Responding to client " << getFd() << " with message " << message;
 	message = RPL_CREATED(getNick(), _server->getDate());
-	send(getFd(), message.c_str(), message.size(), 0);
+	sendBuffer(message);
 	std::cout << "Responding to client " << getFd() << " with message " << message;
 	message = RPL_MYINFO(getNick());
-	send(getFd(), message.c_str(), message.size(), 0);
+	sendBuffer(message);
 	std::cout << "Responding to client " << getFd() << " with message " << message;
 	std::cout << "Successfully registered client " << getHostname() << std::endl << std::endl;
+}
+
+void	Client::pongReply(std::string buffer)
+{
+		std::cout << "Getting Ping request from client " << getFd() << std::endl;
+		std::string message = PONG(buffer);
+		std::cout << "Responding to ping request from client " << getFd() << " with message " << message << std::endl;
+		sendBuffer(message);
+}
+
+void	Client::changeNick(std::string nick)
+{
+		if(checkNick(nick) && checkDoubleNick(nick))
+		{
+			std::string message = NEW_NICK(getNick(), nick);
+			std::cout << "Sending nickname change broadcast : " << message;
+			getServer()->broadcast(message);
+			setNick(nick);
+		}
+}
+
+void	Client::privMsg(std::string command)
+{
+	char* commandbis = &command[8];
+		std::string target = strtok(commandbis, " ");
+		if (target[0] == '#'){
+			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+				if ((*it)->getName() == target){
+					(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
+				}
+			}
+		}
+}
+
+void	Client::changeTopic(std::string command)
+{
+	std::stringstream	parse(command);
+	std::string			argument;
+	std::string			message;
+	getline(parse, argument, ' ')
+	std::cout << "Get topic request from client " << getFd() << " : " << command << std::endl;
+	if(getServer()->getChan().find(argument) == getServer()->getChan().end())
+	{
+		message = ERR_NOSUCHCHANNEL(getHostname(), command);
+		
+	}
+
+}
+
+void	Client::sendBuffer(std::string buffer)
+{
+	_send.append(buffer);
+}
+
+void	Client::resetSend()
+{
+	_send.clear();
 }

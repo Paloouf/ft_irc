@@ -85,13 +85,13 @@ void	Server::replyChannel(Client* client, char* buffer)
 			{
 				message = RPL_WHOREPLY(client->getHostname(), (*it).second->getName(), (*itt)->getUser(), (*itt)->getHostname(), "EasyRC.gg", (*itt)->getNick(), (*itt)->getFullName());
 				std::cout << "Responding to client " << client->getFd() << " with message " << message;
-				send(client->getFd(), message.c_str(), message.size(), 0);
+				client->sendBuffer(message);
 			}
 		}
 	}
 	message = RPL_ENDOFWHO(client->getHostname(), buffer);
 	std::cout << "Responding to client " << client->getFd() << " with message " << message;
-	send(client->getFd(), message.c_str(), message.size(), 0);
+	client->sendBuffer(message);
 }
 
 void	Server::replyUser(Client* client, char* buffer)
@@ -105,12 +105,12 @@ void	Server::replyUser(Client* client, char* buffer)
 		{
 			message = RPL_WHOREPLY(client->getHostname(), (*it)->getFirstChannel(), (*it)->getUser(), (*it)->getHostname(), "EasyRC.gg", (*it)->getNick(), (*it)->getFullName());
 			std::cout << "Responding to client " << client->getFd() << " with message " << message;
-			send(client->getFd(), message.c_str(), message.size(), 0);
+			client->sendBuffer(message);
 		}
 	}
 	message = RPL_ENDOFWHO(client->getHostname(), buffer);
 	std::cout << "Responding to client " << client->getFd() << " with message " << message;
-	send(client->getFd(), message.c_str(), message.size(), 0);
+	client->sendBuffer(message);
 }
 
 void	Server::waitInput(){
@@ -119,7 +119,12 @@ void	Server::waitInput(){
 		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
 	{
-		if (_clientsFd[i].revents != 0)
+		if (i != 0 && !_clients[i]->getSend().empty())
+		{
+			send(_clients[i]->getFd(), _clients[i]->getSend().c_str(), _clients[i]->getSend().size(), 0);
+
+		}
+		else if (_clientsFd[i].revents != 0)
 		{
 			if (_clientsFd[i].fd == _sockfd){
 				addClient();
@@ -171,18 +176,13 @@ void	Server::addClient()
 
 void	Server::deleteClient(Client* client)
 {
-
 	int i = 0;
 	std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
 	while (ite != _chanMap.end())
 	{
 		ite->second->deleteUser(client);
-		std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-		std::string quit = ":" + prefix + " QUIT : Quit: Bye for now!\r\n";
-		for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
-		{
-			send((*it)->getFd(), quit.c_str(), quit.size(), 0);
-		}
+		std::string quit = QUIT(client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname()));
+		broadcast(quit);
 		if ((*ite->second).getClient().empty())
 		{
 			delete ite->second;
@@ -244,5 +244,5 @@ void	Server::checkChannel(Client *client, std::string buffer){
 void	Server::broadcast(std::string message)
 {
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
-		send((*it)->getFd(), message.c_str(), message.size(), 0);
+		(*it)->sendBuffer(message);
 }
