@@ -34,6 +34,7 @@ void	Client::parseBuffer(char * buffer)
 	if (command.substr(0,5) == "QUIT "){
 		std::cout << "cacaprout\n";
 		getServer()->deleteClient(this);
+		return ;
 	}
 	if (_negoCount < 4)
 	{
@@ -143,49 +144,53 @@ void	Client::setPrefix(){
 void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
-	std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
-	std::string	message;
-	if (command.size() > 4 && command.substr(0,5) == "PING ")
-		pongReply(command.substr(5));
-	if (command.size() > 4 && command.substr(0,5) == "JOIN ")
-    	getServer()->checkChannel(this, command.substr(5, command.size() - 6));
-	if (command.size() > 3 && command.substr(0,4) == "WHO ")
-		getServer()->whoReply(this, buffer);
-	if (command.size() > 4 && command.substr(0,5) == "NICK ")
-		changeNick(command.substr(5));
-	if (command.substr(0,8) == "PRIVMSG ")
-		privMsg(command);
-	if(command.substr(0,5) == "MODE "){
-		char* commandbis = &command[5];
-		std::string target = strtok(commandbis, " ");
-		if (target[0] == '#'){
-			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
-				if ((*it)->getName() == target){
-					(*it)->parseMode(this, target, command.substr(5 + target.size()));
+	// std::stringstream sBuff(buff);
+	// std::string command;
+	// while (getline(sBuff, command)){
+		std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
+		std::string	message;
+		if (command.size() > 4 && command.substr(0,5) == "PING ")
+			pongReply(command.substr(5));
+		if (command.size() > 4 && command.substr(0,5) == "JOIN ")
+			getServer()->checkChannel(this, command.substr(5, command.size() - 6));
+		if (command.size() > 3 && command.substr(0,4) == "WHO ")
+			getServer()->whoReply(this, buffer);
+		if (command.size() > 4 && command.substr(0,5) == "NICK ")
+			changeNick(command.substr(5));
+		if (command.substr(0,8) == "PRIVMSG ")
+			privMsg(command);
+		if(command.substr(0,5) == "MODE "){
+			char* commandbis = &command[5];
+			std::string target = strtok(commandbis, " ");
+			if (target[0] == '#'){
+				for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+					if ((*it)->getName() == target){
+						(*it)->parseMode(this, target, command.substr(5 + target.size()));
+					}
 				}
 			}
 		}
-	}
-	if(command.substr(0,7) == "TOPIC #")
-		changeTopic(command.substr(6));
-	if (command.substr(0,5) == "QUIT ")
-	{
-		_server->deleteClient(this);
-	}
-	if (command.substr(0,5) == "PART "){
-		std::string target = command.substr(command.find("#"), command.find(" "));
-		std::cout << target << std::endl;
-		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
-			if (target == (*it)->getName()){
-				(*it)->broadcast(RPL_PART(getPrefix(), (*it)->getName()));
-				std::remove(_chan.begin(), _chan.end(), (*it));
-				_chan.pop_back();
-				(*it)->deleteUser(this);
-				break;
-				
+		if(command.substr(0,7) == "TOPIC #")
+			changeTopic(command.substr(6));
+		if (command.substr(0,5) == "QUIT ")
+		{
+			_server->deleteClient(this);
+		}
+		if (command.substr(0,5) == "PART "){
+			std::string target = command.substr(command.find("#"), command.find(" "));
+			std::cout << target << std::endl;
+			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+				if (target == (*it)->getName()){
+					(*it)->broadcast(RPL_PART(getPrefix(), (*it)->getName()));
+					std::remove(_chan.begin(), _chan.end(), (*it));
+					_chan.pop_back();
+					(*it)->deleteUser(this);
+					break;
+					
+				}
 			}
 		}
-	}
+	//}
 }
 
 std::string	Client::getFirstChannel() const

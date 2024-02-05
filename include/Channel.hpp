@@ -20,7 +20,6 @@ class Channel{
 		std::string getTopic() const {return _topic;}
 		std::string getPass() const {return _pass;}
 		void	setLimit(Client*, std::string);
-		bool	isAdmin(Client* client);
 		void	setPass(std::string pass){_pass = pass;}
 
 		void	join(Client* client);
@@ -55,9 +54,5 @@ class Channel{
 		std::vector<Client*> 	_admins;
 		std::vector<Client*> 	_clients;
 
-		bool			_i;
-		bool			_t;
-		bool			_l;
-		bool			_k;
 };
 

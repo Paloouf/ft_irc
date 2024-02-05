@@ -13,6 +13,7 @@
 #define RPL_NAMREPLY(client, channel, users)			                                              "353 " + client + " = " + channel + " :" + users + "\n"
 #define RPL_ENDOFNAMES(client, channel)					                                                "366 " + client + " " + channel + " :End of /NAMES list.\n"
 #define ERR_ERRONEUSNICKNAME(client, nick)                                                      "432 " + client + " " + nick + " :Erroneus nickname\n"
+#define ERR_NOSUCHCHANNEL(client, channel)                                                      "403 " + client + " " + channel + " :No such channel\n"
 #define ERR_NICKNAMEINUSE(client, nick)                                                         "433 " + client + " " + nick + " :Nickname is already in use\n"
 #define ERR_NEEDMOREPARAMS(client, command)                                                     "461 " + client + " " + command + ":Not enough parameters\n"
 #define ERR_ALREADYREGISTERED(client)                                                           "462 " + client + " :You may not reregister\n"

@@ -119,13 +119,8 @@ void	Server::waitInput(){
 		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
 	{
-		if (i != 0 && !_clients[i - 1]->getSend().empty())
-		{
-			std::cout << "here\n";
-			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
-			_clients[i - 1]->resetSend();
-		}
-		else if (_clientsFd[i].revents != 0)
+		
+		if (_clientsFd[i].revents != 0)
 		{
 			if (_clientsFd[i].fd == _sockfd){
 				addClient();
@@ -133,6 +128,12 @@ void	Server::waitInput(){
 			}
 			else
 				receiveData(this->_clients[i - 1]);
+		}
+		else if (i != 0 && !_clients[i - 1]->getSend().empty())
+		{
+			std::cout << "here\n";
+			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
+			_clients[i - 1]->resetSend();
 		}
 	}
 }
@@ -228,7 +229,7 @@ void	Server::checkChannel(Client *client, std::string buffer){
 	if (_chanMap.find(buffer) != _chanMap.end())
 	{
 		_chanMap[buffer]->join(client);
-		_chanMap[buffer]->update(client);
+		_chanMap[buffer]->broadcast(RPL_JOIN(client->getPrefix(), buffer));
 	}
 	else{
 		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
