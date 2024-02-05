@@ -25,6 +25,7 @@
 
 
 //MODES
+
 #define RPL_ADDOP(prefix, target, msg)		":" + prefix + " MODE " + target + " +o " + msg + "\n"
 #define RPL_REMOP(prefix, target, msg)   	":" + prefix + " MODE " + target + " -o " + msg + "\n"
 #define RPL_ADDPASS(prefix, target, msg)	":" + prefix + " MODE " + target + " +k " + msg + "\n"
@@ -35,3 +36,4 @@
 #define RPL_REMINV(prefix, target)			":EasyRC.gg MODE " + target + " -i\n"
 #define RPL_ADDTOP(prefix, target)			":" + prefix + " MODE " + target + " +t\n"
 #define RPL_REMTOP(prefix, target)			":" + prefix + " MODE " + target + " -t\n"
+
