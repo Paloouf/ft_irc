@@ -174,6 +174,20 @@ void	Client::parseMsg(char *buffer)
 				}
 			}
 		}
+		else{
+			std::cout << target << std::endl;
+			std::stringstream buff;
+			buff << command;
+			std::string	cmd, cible, message;
+			buff >> cmd >> cible >> message;
+			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
+				if ((*it)->getNick() == target){
+					std::cout << "jy suis presque\n";
+					send(RPL_AWAY())
+				}
+			}
+
+		}
 	}
 	if(command.substr(0,5) == "MODE "){
 		char* commandbis = &command[5];
