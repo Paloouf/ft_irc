@@ -315,27 +315,24 @@ void	Client::changeNick(std::string nick)
 void	Client::privMsg(std::string command)
 {
 	char* commandbis = &command[8];
-		std::string target = strtok(commandbis, " ");
-		if (target[0] == '#'){
-			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
-				if ((*it)->getName() == target){
-					(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
-				}
+	std::string target = strtok(commandbis, " ");
+	if (target[0] == '#'){
+		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+			if ((*it)->getName() == target){
+				(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
 			}
 		}
-		else{
-			std::cout << target << std::endl;
-			std::stringstream buff;
-			buff << command;
-			std::string	cmd, cible, message;
-			buff >> cmd >> cible >> message;
-			message = message.substr(1);
-			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
-				if ((*it)->getNick() == target){
-					(*it)->sendBuffer(RPL_AWAY(getNick(), cible, message));
-				}
+	}
+	else{
+		std::string message;
+		message = command.substr(command.find(":"));
+		cible = ":" + getNick() + " " + cmd + " " + target + " " + message + "\n";
+		for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
+			if ((*it)->getNick() == target){
+				(*it)->sendBuffer(cible);
 			}
 		}
+	}
 }
 
 void	Client::changeTopic(std::string command)
@@ -348,7 +345,6 @@ void	Client::changeTopic(std::string command)
 	if(getServer()->getChan().find(argument) == getServer()->getChan().end())
 	{
 		message = ERR_NOSUCHCHANNEL(getHostname(), command);
-		
 	}
 
 }
