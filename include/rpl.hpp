@@ -24,7 +24,6 @@
 #define RPL_TOPIC(client, channel, topic)	                                                      "332" + client + " " + channel + " :" + topic + "\n"
 #define RPL_WHOREPLY(client, channel, username, hostname, serverhostname, nickname, realname)   "352 " + client + ":" + channel + " " + username + " " + hostname + " " + serverhostname + " " + nickname + " H :0 " + realname + "\n"
 #define RPL_NAMREPLY(client, channel, users)			                                              "353 " + client + " = " + channel + " :" + users + "\n"
-#define RPL_ENDOFNAMES(client, channel)					                                                "366 " + client + " " + channel + " :End of /NAMES list\n"
 #define ERR_ERRONEUSNICKNAME(client, nick)                                                      "432 " + client + " " + nick + " :Erroneus nickname\n"
 #define ERR_NOSUCHCHANNEL(client, channel)                                                      "403 " + client + " " + channel + " :No such channel\n"
 #define ERR_NICKNAMEINUSE(client, nick)                                                             "433 " + client + " " + nick + " :Nickname is already in use\n"

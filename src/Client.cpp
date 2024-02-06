@@ -145,7 +145,7 @@ void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
 
-	//std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
+	std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
 	std::string	message;
 	if (command.size() > 4 && command.substr(0,5) == "PING ")
 		pongReply(command.substr(5));
@@ -329,8 +329,8 @@ void	Client::privMsg(std::string command)
 			std::stringstream buff;
 			buff << command;
 			std::string	cmd, cible, message;
-			buff >> cmd >> cible >> message;
-			message = message.substr(1);
+			buff >> cmd >> cible;
+			message = cible.substr(cible.find(":") + 1);
 			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
 				if ((*it)->getNick() == target){
 					(*it)->sendBuffer(RPL_AWAY(getNick(), cible, message));

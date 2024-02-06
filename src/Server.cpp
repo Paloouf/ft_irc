@@ -230,6 +230,10 @@ void	Server::receiveData(Client *client){
 //CHANNEL CHECK//
 
 void	Server::checkChannel(Client *client, std::string buffer){
+	std::stringstream sBuff(buffer);
+	std::string name, pass;
+	sBuff >> name >> pass;
+	std::cout << "pass: " << pass << std::endl;
 	if (_chanMap.find(buffer) != _chanMap.end())
 	{
 		_chanMap[buffer]->join(client);

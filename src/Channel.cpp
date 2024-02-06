@@ -97,29 +97,33 @@ void    Channel::parseMode(Client *client, std::string target, std::string buff)
 		params.push_back(param);
 	}
     if (isAdmin(client)){
-        if (modes.find("-") != std::string::npos){
-            //remove modes
-            size_t i = modes.find("-");
-            std::string del;
-            i++;
-            while (i != modes.find("+") && i < modes.size()){
-                del += modes[i];
+        while (modes.find("-") != std::string::npos || modes.find("+") != std::string::npos){
+            if (modes.find("-") < modes.find("+")){
+                //remove modes
+                size_t i = modes.find("-");
+                std::string del;
                 i++;
+                while (i != modes.find("+") && i < modes.size()){
+                    del += modes[i];
+                    i++;
+                }
+                removeMode(client, del, params);
+                modes = modes.substr(i);
             }
-            removeMode(client, del, params);
-        }
-        if (modes.find("+") != std::string::npos){
-            //add modes
-            size_t i = modes.find("+");
-            std::cout << "i: " << i << ", size: " << modes.size() << std::endl;
-            std::string add;
-            i++;
-            while (i != modes.find("-") && i < modes.size()){
-                add += modes[i];
+            else{
+                //add modes
+                size_t i = modes.find("+");
+                std::cout << "i: " << i << ", size: " << modes.size() << std::endl;
+                std::string add;
                 i++;
+                while (i != modes.find("-") && i < modes.size()){
+                    add += modes[i];
+                    i++;
+                }
+                addMode(client, add, params);
+                std::cout << target << " miaou " << client->getFd() << std::endl;
+                modes = modes.substr(i);
             }
-            addMode(client, add, params);
-            std::cout << target << " miaou " << client->getFd() << std::endl;
         }
     }
     else
