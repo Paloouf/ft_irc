@@ -7,10 +7,8 @@ class Channel;
 
 class Server{
 	private:
-	
 		Server(){};
-
-		//VARIABLES//
+		
 		int	_sockfd;
 		std::string _port;
 		std::string _password;
@@ -19,36 +17,31 @@ class Server{
 		std::map<std::string, Channel*> _chanMap;
 		struct pollfd	*_clientsFd;
 		
-		//FUNCTIONS//
-		void	setTime();
-		void	createFd();
+		void	parseBuffer(char* buffer, Client* client);
+		void	sendWelcome(Client* client);
 		void	listening();
+		void	createFd();
 		void	waitInput();
 		void	addClient();
+		void	setTime();
 		void	receiveData(Client *client);
-		void	sendWelcome(Client* client);
-		void	parseBuffer(char* buffer, Client* client);
 		std::string	convertIP(const void *address);
-		
 
 		//void	createClient();
 	public:
-
-		Server(std::string port, std::string password);
 		~Server();
-		
-		void							checkInput();
-		void							deleteClient(Client* client);
-		void							broadcast(std::string message);
-		void							replyUser(Client* client, char* buffer);
-		void							whoReply(Client* client, char* buffer);
-		void							replyChannel(Client* client, char* buffer);
-    void					    deleteChannel(std::string);
-		void							checkChannel(Client* client, std::string buffer);
-		std::string 					getDate(){return _date;}
-		std::string 					getPort(){return _port;}
-		std::string 					getPassword(){return _password;}
-		std::vector<Client*>			&getClient(){return _clients;}
+		Server(std::string port, std::string password);
+		void					checkInput();
+		void					deleteClient(Client* client);
+		void					checkChannel(Client* client, std::string buffer);
+		void					whoReply(Client* client, char* buffer);
+		void					replyChannel(Client* client, char* buffer);
+		void					replyUser(Client* client, char* buffer);
+    	void					deleteChannel(std::string);
+		void					broadcast(std::string message);
+		std::string 			getDate(){return _date;}
+		std::string 			getPassword(){return _password;}
+		std::string 			getPort(){return _port;}
+		std::vector<Client*>	&getClient(){return _clients;}
 		std::map<std::string, Channel*>	&getChan(){return _chanMap;}
-
 };
