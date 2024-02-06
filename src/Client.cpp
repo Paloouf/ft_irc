@@ -324,11 +324,17 @@ void	Client::privMsg(std::string command)
 		}
 	}
 	else{
+		std::string cmd, msg, cible;
+		if (command.find(":") == std::string::npos)
+		{
+			cible = "412 :" + getNick() + " " + ":No text to send\n";
+			sendBuffer(cible);
+			return;
+		}
 		std::string message;
 		message = command.substr(command.find(":"));
 		std::stringstream buff;
 		buff << command;
-		std::string cmd, msg, cible;
 		buff >> cmd >> msg;
 		cible = ":" + getNick() + " " + cmd + " " + target + " " + message + "\n";
 		for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
