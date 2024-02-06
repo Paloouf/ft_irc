@@ -183,7 +183,6 @@ void	Client::parseMsg(char *buffer)
 			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
 				if ((*it)->getNick() == target){
 					std::cout << "jy suis presque\n";
-					send(RPL_AWAY())
 				}
 			}
 
