@@ -1,6 +1,6 @@
 #include "../include/Client.hpp"
 
-Client::Client(Server *server, int fd, std::string hostname, int port) :_server(server), _fd(fd), _port(port),_send(""),_hostname(hostname){
+Client::Client(Server *server, int fd, std::string hostname, int port) :_server(server), _fd(fd), _port(port),_hostname(hostname){
 	std::cout << &_server << "Test client, fd: " << this->getFd() << ", hostname: " << this->getHostname() << std::flush;
 	std::cout << ", port: " << this->getPort() << std::endl << std::endl;
 	this->resetBuffer();	
@@ -34,6 +34,7 @@ void	Client::parseBuffer(char * buffer)
 	if (command.substr(0,5) == "QUIT "){
 		std::cout << "cacaprout\n";
 		getServer()->deleteClient(this);
+		return ;
 	}
 	if (_negoCount < 4)
 	{
@@ -74,11 +75,12 @@ void	Client::parseBuffer(char * buffer)
 		parseMsg(buffer);
 }
 
-
 void	Client::parseNego(char *buffer)
 {
 	std::string command = buffer;
 	addBuffer(buffer);
+	if(getCommand().find('\n') == std::string::npos)
+		return;
 	std::stringstream 	sBuff(getCommand());
 	std::string			message;
 	while (getline(sBuff, command))
@@ -142,13 +144,17 @@ void	Client::setPrefix(){
 
 void	Client::parseMsg(char *buffer)
 {
-	std::string command = buffer;
-	std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
+	
+	addBuffer(buffer);
+	if(getCommand().find('\n') == std::string::npos)
+		return;
+	//std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
+	std::string command = getCommand();
 	std::string	message;
 	if (command.size() > 4 && command.substr(0,5) == "PING ")
 		pongReply(command.substr(5));
 	if (command.size() > 4 && command.substr(0,5) == "JOIN ")
-    	getServer()->checkChannel(this, command.substr(5, command.size() - 6));
+		getServer()->checkChannel(this, command.substr(5, command.size() - 6));
 	if (command.size() > 3 && command.substr(0,4) == "WHO ")
 		getServer()->whoReply(this, buffer);
 	if (command.size() > 4 && command.substr(0,5) == "NICK ")
@@ -182,10 +188,48 @@ void	Client::parseMsg(char *buffer)
 				_chan.pop_back();
 				(*it)->deleteUser(this);
 				break;
-				
 			}
 		}
 	}
+	if (command.substr(0,5) == "KICK ")
+	{
+		std::string target = command.substr(command.find("#"));
+		std::cout << target << std::endl;
+		std::stringstream buff;
+		buff << target;
+		std::string	user, cible, channel;
+		buff >> channel >> cible;
+		user = this->getNick();
+		std::cout << "user:" << user << " chan: " << channel << " cible:" << cible << std::endl;
+		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+			if (channel == (*it)->getName()){
+				if ((*it)->isAdmin(this))
+				{
+					std::vector<Client*>::iterator itt = (*it)->getClient().begin();
+					while (itt != (*it)->getClient().end())
+					{
+						if (cible == (*itt)->getNick())
+						{
+							(*it)->broadcast(RPL_KICK(this->getPrefix(), (*it)->getName(), (*itt)->getNick()));
+							std::cout << "on broadcast: " << RPL_KICK(getPrefix(), (*it)->getName(), (*itt)->getNick());
+							(*it)->deleteUser(*itt);
+							if ((*it)->getClient().size() == 0)
+								return;
+							itt = (*it)->getClient().begin();
+						}
+						else
+							std::cout << "pipounet" << std::endl;
+						itt++;
+					}
+				}
+				else
+					std::cout << "This Client is not admin\n";
+			}
+			if (_chan.size() == 0)
+				return;
+		}
+	}
+	resetBuffer();
 }
 
 std::string	Client::getFirstChannel() const
@@ -238,7 +282,6 @@ bool		Client::checkDoubleUser(const char* user)
 	return true;
 }
 
-
 void	Client::sendWelcome()
 {
 	std::string message = RPL_WELCOME(getNick(), getFullName());
@@ -263,7 +306,6 @@ void	Client::pongReply(std::string buffer)
 		std::cout << "Responding to ping request from client " << getFd() << " with message " << message << std::endl;
 		sendBuffer(message);
 }
-
 void	Client::changeNick(std::string nick)
 {
 		if(checkNick(nick) && checkDoubleNick(nick))
@@ -283,6 +325,19 @@ void	Client::privMsg(std::string command)
 			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
 				if ((*it)->getName() == target){
 					(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
+				}
+			}
+		}
+		else{
+			std::cout << target << std::endl;
+			std::stringstream buff;
+			buff << command;
+			std::string	cmd, cible, message;
+			buff >> cmd >> cible >> message;
+			message = message.substr(1);
+			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
+				if ((*it)->getNick() == target){
+					(*it)->sendBuffer(RPL_AWAY(getNick(), cible, message));
 				}
 			}
 		}
@@ -311,4 +366,18 @@ void	Client::sendBuffer(std::string buffer)
 void	Client::resetSend()
 {
 	_send.clear();
+}
+
+void	Client::deleteChan(Channel *channel)
+{
+	for (unsigned i = 0; i < _chan.size(); i++)
+	{
+		std::vector<Channel*>::iterator	it = _chan.begin() + i;
+		if (channel == (*it))
+		{
+			_chan.erase(_chan.begin() + i);
+            std::cout << "delChan" << _chan.size() << std::endl;
+			i = 0;
+		}
+	}
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <algorithm>
 #include <arpa/inet.h>
 #include <cstdlib>
@@ -26,4 +25,3 @@
 #include "Client.hpp"
 #include "rpl.hpp"
 #include "Server.hpp"
-

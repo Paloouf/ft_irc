@@ -13,35 +13,31 @@ class Channel{
 		~Channel();
 
 
-		std::vector<Client*>	&getClient(){return _clients;}
-		std::vector<Client*>	&getAdmins(){return _admins;}
+    	std::vector<Client*>	&getClient(){return _clients;}
+    	std::vector<Client*>	&getAdmins(){return _admins;}
 		Server*		getServer() {return _server;}
 		std::string getName()const {return _name;}
 		std::string getTopic() const {return _topic;}
 		std::string getPass() const {return _pass;}
 		void	setLimit(Client*, std::string);
-		bool	isAdmin(Client* client);
 		void	setPass(std::string pass){_pass = pass;}
-
 		void	join(Client* client);
 		void	update(Client* client);
-		bool	isAdmin(Client* client);
-		void	deleteUser(Client *client);
-		void	broadcast(std::string message);
 		void	sendMsg(Client* client, std::string target, std::string msg);
 		void	sendMode(Client* client, std::string, std::string, std::string);
 		void	parseMode(Client *client, std::string target, std::string modes);
 		void	removeMode(Client *client,std::string, std::vector<std::string>);
 		void	addMode(Client *client,std::string, std::vector<std::string>);
-
 		void	setTopic(std::string topic) {_topic = topic;}
+		void	broadcast(std::string message);
+		void	deleteUser(Client *client);
+		bool	isAdmin(Client* client);
 
 	private:
 		Channel();
 		Server*			_server;
 		std::string		_name;
 		std::string		_pass;
-
 		bool			_i;
 		bool			_o;
 		bool			_t;
@@ -51,13 +47,8 @@ class Channel{
 		long unsigned int				_limit;
 
 		Client*			_creator;
-
 		std::vector<Client*> 	_admins;
 		std::vector<Client*> 	_clients;
 
-		bool			_i;
-		bool			_t;
-		bool			_l;
-		bool			_k;
 };
 

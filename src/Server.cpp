@@ -57,8 +57,12 @@ void	Server::listening()
 	listen(_sockfd, 8);
 	std::cout << "Waiting for connection...\n\n";
 	createFd();
-	while (1)
+	
+	while (1){
+		
 		waitInput();
+		
+	}
 }
 
 //DATA REPLYING//
@@ -114,18 +118,12 @@ void	Server::replyUser(Client* client, char* buffer)
 }
 
 void	Server::waitInput(){
-	int val = poll(_clientsFd, _clients.size() + 1, -1);
+	int val = poll(_clientsFd, _clients.size() + 1, 1);
 	if (val < 0)
 		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
 	{
-		if (i != 0 && !_clients[i - 1]->getSend().empty())
-		{
-			std::cout << "here\n";
-			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
-			_clients[i - 1]->resetSend();
-		}
-		else if (_clientsFd[i].revents != 0)
+		if (_clientsFd[i].revents != 0)
 		{
 			if (_clientsFd[i].fd == _sockfd){
 				addClient();
@@ -133,6 +131,13 @@ void	Server::waitInput(){
 			}
 			else
 				receiveData(this->_clients[i - 1]);
+		}
+		else if (i != 0 && !_clients[i - 1]->getSend().empty())
+		{
+
+			std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
+			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
+			_clients[i - 1]->resetSend();
 		}
 	}
 }

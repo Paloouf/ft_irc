@@ -11,7 +11,6 @@ Channel::Channel(Server *server, std::string name, Client* client) :_server(serv
     _o = false;
     _limit = 0;
     this->join(client);
-    
 }
 Channel::~Channel(){
 	std::cout << "Channel '" << getName() << "' destroyed\n";
@@ -19,63 +18,60 @@ Channel::~Channel(){
 
 
 void Channel::join(Client* client){
-
-    std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-    std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
-    client->sendBuffer(join);
-    if (!_topic.compare(""))
-    {
-        std::string topic = RPL_NOTOPIC(client->getNick(), this->getName());
-        client->sendBuffer(topic);
+    if (!_l || _limit >= _clients.size() + 1){
+        std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
+        std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
+        client->sendBuffer(join);
+        if (!_topic.compare(""))
+        {
+            std::string topic = RPL_NOTOPIC(client->getNick(), this->getName());
+            client->sendBuffer(topic);
+        }
+        else{
+            std::string topic = RPL_TOPIC(client->getNick(), this->getName(), this->getTopic());
+            client->sendBuffer(topic);
+        }
+        _clients.push_back(client);
+        client->getChan().push_back(this);
+        std::string names;
+        for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+        for(std::vector<Client*>::iterator itt = _admins.begin(); itt != _admins.end(); itt++){
+            if ((*itt)->getFd() == (*it)->getFd()){
+                names += "@";
+                //it++;
+            }
+        }
+            names += (*it)->getNick() + " ";
+        }
+        std::string userlist = RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str());
+        client->sendBuffer(userlist);
+        std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
+        client->sendBuffer(endofnames);
     }
-    else{
-        std::string topic = RPL_TOPIC(client->getNick(), this->getName(), this->getTopic());
-        client->sendBuffer(topic);
-    }
-    _clients.push_back(client);
-    client->getChan().push_back(this);
-    std::string names;
-    for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-	for(std::vector<Client*>::iterator itt = _admins.begin(); itt != _admins.end(); itt++){
-		if ((*itt)->getFd() == (*it)->getFd()){
-			names += "@";
-			//it++;
-		}
-	}
-        names += (*it)->getNick() + " ";
-    }
-    std::string userlist = RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str());
-    client->sendBuffer(userlist);
-    std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
-    client->sendBuffer(endofnames);
-
-	std::cout << join << userlist << endofnames << std::endl;
-
-    //Need to make more functions to send /PRIVMSGS to other clients in the channel, set Topic with /TOPIC
 }
 
 void	Channel::update(Client *client){
 	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
 	std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end() - 1; it++){
-		client->sendBuffer(join);
+		(*it)->sendBuffer(join);
 		std::cout << (*it)->getFd() << ": updated with " << join;
 	}
 }
 
 void	Channel::sendMsg(Client *client, std::string target, std::string msg){
-	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-    	std::string fullmsg = ":" + prefix + " PRIVMSG " + target + " :" + msg;
+    std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
+    std::string fullmsg = ":" + prefix + " PRIVMSG " + target + " :" + msg;
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
 		if (client->getFd() != (*it)->getFd()){
-			client->sendBuffer(fullmsg);
+			(*it)->sendBuffer(fullmsg);
 			std::cout << (*it)->getFd() << ": updated with " << fullmsg;
 		}
 	}
 }
 
 void	Channel::broadcast(std::string message)
-{
+{	
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
 		(*it)->sendBuffer(message);
 	}
@@ -84,9 +80,9 @@ void	Channel::broadcast(std::string message)
 
 void	Channel::sendMode(Client *client, std::string target, std::string mode, std::string msg){
 	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-    	std::string fullmsg = ":" + prefix + " MODE " + target + " " + mode + " " + msg;
+    std::string fullmsg = ":" + prefix + " MODE " + target + " " + mode + " " + msg;
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-			client->sendBuffer(fullmsg);
+			(*it)->sendBuffer(fullmsg);
 			std::cout << (*it)->getFd() << ": updated with " << fullmsg;	
 	}
 }
@@ -380,10 +376,8 @@ void	Channel::deleteUser(Client *client)
 	for (unsigned i = 0; i < _admins.size(); i++)
 	{
 		if (_admins[i]->getFd() == client->getFd())
-		{
-           
-			_admins.erase(_admins.begin() + i); 
-            std::cout << "kikouette " << _admins.size() << std::endl;
+    {
+			_admins.erase(_admins.begin() + i);
 			i = 0;
 		}
 	}
@@ -391,8 +385,8 @@ void	Channel::deleteUser(Client *client)
 	{
 		if (_clients[i]->getFd() == client->getFd())
 		{
+            client->deleteChan(this);
 			_clients.erase(_clients.begin() + i);
-            std::cout << "pipouette " << _clients.size() << std::endl;
 			i = 0;
 		}
 	}
@@ -400,13 +394,10 @@ void	Channel::deleteUser(Client *client)
 	{
 		_admins.push_back(_clients[0]);
         std::string servname = "EasyRC.gg";
-        std::cout << "cacamou1 " << RPL_ADDOP(servname, getName(), _clients[0]->getNick());
         broadcast(RPL_ADDOP(servname, getName(), _clients[0]->getNick()));
-		//need to add sendmsg fonction for tell at all client the new admin in chan
 	}
 	if (_clients.size() == 0){
-		std::cout << "MIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM\n";
 		getServer()->deleteChannel(getName());
-	}
+    }
 }
 
