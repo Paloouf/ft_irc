@@ -225,6 +225,19 @@ void	Client::parseMsg(char *buffer)
 				return;
 		}
 	}
+	if (command.substr(0,7) == "INVITE "){
+		std::stringstream buff(command);
+		std::string cmd, target, channelName;
+		buff >> cmd >> target >> channelName;
+		std::cout << "MSG d'INVITE: " << target << " " << channelName << std::endl;
+		for(std::vector<Client*>::iterator it = getServer()->getClient().begin(); it != getServer()->getClient().end();it++){
+			if ((*it)->getNick() == target){
+				(*it)->sendBuffer(RPL_INVITING(getPrefix(), target, channelName));
+				//NEED TO ADD CONDITIONS TO JOIN IF _i == true, et add le (*it) dans un vecteur invite du chan en question
+			}
+		}
+		
+	}
 
 }
 
@@ -325,18 +338,17 @@ void	Client::privMsg(std::string command)
 			}
 		}
 		else{
-			std::cout << target << std::endl;
-			std::stringstream buff;
-			buff << command;
-			std::string	cmd, cible, message;
+			std::stringstream buff(command);
+			std::string message, cible, cmd;
 			buff >> cmd >> cible;
-			message = cible.substr(cible.find(":") + 1);
+			message = command.substr(command.find(":"));
+			cible = ":" + getNick() + " " + cmd + " " + target + " " + message + "\n";
 			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
 				if ((*it)->getNick() == target){
-					(*it)->sendBuffer(RPL_AWAY(getNick(), cible, message));
+					(*it)->sendBuffer(cible);
 				}
 			}
-		}
+	}
 }
 
 void	Client::changeTopic(std::string command)

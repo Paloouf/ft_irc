@@ -6,7 +6,7 @@
 #define RPL_CREATED(client, date)	                                                                "003 " + client + " :This server was created " + date
 #define RPL_ENDOFWHO(client, mask)                                                                  "315 " + client + " " + mask + " :End of WHO list\n"
 #define RPL_ENDOFNAMES(client, channel)					                                            "366 " + client + " " + channel + " :End of /NAMES list.\n"
-#define RPL_INVITING(prefix, nick, target)      ":" + prefix + " " + nick + " " + target + "\n"
+#define RPL_INVITING(prefix, nick, target)      ":" + prefix + " INVITE " + nick + " " + target + "\n"
 #define RPL_JOIN(prefix, target)	            ":" + prefix + " JOIN " + target + "\n"
 #define RPL_KICK(prefix, channel, target)       ":" + prefix + " KICK " + channel + " " + target + "\n"
 #define RPL_MYINFO(client)		                                                                    "004 " + client + " EasyRC v0.1 N/A N/A\n"
