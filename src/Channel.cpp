@@ -47,6 +47,8 @@ void Channel::join(Client* client){
         client->sendBuffer(userlist);
         std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
         client->sendBuffer(endofnames);
+    }else{
+        client->sendBuffer(ERR_CHANNELISFULL(client->getPrefix(), _name));
     }
 }
 
