@@ -326,6 +326,10 @@ void	Client::privMsg(std::string command)
 	else{
 		std::string message;
 		message = command.substr(command.find(":"));
+		std::stringstream buff;
+		buff << command;
+		std::string cmd, msg, cible;
+		buff >> cmd >> msg;
 		cible = ":" + getNick() + " " + cmd + " " + target + " " + message + "\n";
 		for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
 			if ((*it)->getNick() == target){
