@@ -22,8 +22,7 @@ void Channel::join(Client* client){
 
     std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
     std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
-    if (_clients.size() == 0)
-        client->sendBuffer(join);
+    client->sendBuffer(join);
     if (!_topic.compare(""))
     {
         std::string topic = RPL_NOTOPIC(client->getNick(), this->getName());
@@ -384,7 +383,6 @@ void	Channel::deleteUser(Client *client)
 		{
            
 			_admins.erase(_admins.begin() + i); 
-            std::cout << "kikouette " << _admins.size() << std::endl;
 			i = 0;
 		}
 	}
@@ -393,7 +391,6 @@ void	Channel::deleteUser(Client *client)
 		if (_clients[i]->getFd() == client->getFd())
 		{
 			_clients.erase(_clients.begin() + i);
-            std::cout << "pipouette " << _clients.size() << std::endl;
 			i = 0;
 		}
 	}
@@ -401,12 +398,10 @@ void	Channel::deleteUser(Client *client)
 	{
 		_admins.push_back(_clients[0]);
         std::string servname = "EasyRC.gg";
-        std::cout << "cacamou1 " << RPL_ADDOP(servname, getName(), _clients[0]->getNick());
         broadcast(RPL_ADDOP(servname, getName(), _clients[0]->getNick()));
 		//need to add sendmsg fonction for tell at all client the new admin in chan
 	}
 	if (_clients.size() == 0){
-		std::cout << "MIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM\n";
 		getServer()->deleteChannel(getName());
 	}
 }

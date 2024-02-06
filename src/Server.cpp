@@ -135,13 +135,13 @@ void	Server::waitInput(){
 		else if (i != 0 && !_clients[i - 1]->getSend().empty())
 		{
 			//std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
-			std::stringstream sBuff(_clients[i - 1]->getSend());
-			std::string buff;
-			while (getline(sBuff, buff)){
-				buff += '\n';
-				std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << buff << "\nEND OF MSG\n";
-				send(_clients[i - 1]->getFd(), buff.c_str(), buff.size(), 0);
-			}
+			// std::stringstream sBuff(_clients[i - 1]->getSend());
+			// std::string buff;
+			// while (getline(sBuff, buff)){
+			// 	buff += '\n';
+				std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
+				send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
+			//}
 			_clients[i - 1]->resetSend();
 		}
 	}
@@ -238,8 +238,7 @@ void	Server::checkChannel(Client *client, std::string buffer){
 	if (_chanMap.find(buffer) != _chanMap.end())
 	{
 		_chanMap[buffer]->join(client);
-		//_chanMap[buffer]->update(client);
-		_chanMap[buffer]->broadcast(RPL_JOIN(client->getPrefix(), buffer));
+		_chanMap[buffer]->update(client);
 	}
 	else{
 		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
