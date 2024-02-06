@@ -19,6 +19,7 @@ class Channel{
 		std::string getName()const {return _name;}
 		std::string getTopic() const {return _topic;}
 		std::string getPass() const {return _pass;}
+		bool	const &getChanK() const {return _k;}
 		void	setLimit(Client*, std::string);
 		void	setPass(std::string pass){_pass = pass;}
 		void	join(Client* client);
