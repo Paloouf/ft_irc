@@ -1,26 +1,29 @@
 #pragma once
 
+
+#include <algorithm>
+#include <arpa/inet.h>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <fcntl.h>
+#include <iomanip>
 #include <iostream>
+#include <map>
+#include <netinet/in.h>
+#include <poll.h>
+#include <sstream>
 #include <stdexcept>
 #include <stdint.h>
 #include <string.h>
-#include <vector>
-#include <netinet/in.h>
 #include <sys/socket.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
-#include "Client.hpp"
-#include "Server.hpp"
-#include "Channel.hpp"
-#include "rpl.hpp"
-#include <poll.h>
-#include <cstdlib>
-#include <sstream>
-#include <ctime>
-#include <map>
-#include <iomanip>
 #include <unistd.h>
-#include <cstring>
-#include "Error.hpp"
+#include <vector>
 #include <algorithm>
 #include <cerrno>
+#include "Error.hpp"
+#include "Channel.hpp"
+#include "Client.hpp"
+#include "rpl.hpp"
+#include "Server.hpp"
+

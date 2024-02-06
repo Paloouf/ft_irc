@@ -2,8 +2,7 @@
 
 #include <iostream>
 
-
-#define RPL_WELCOME(client, text)	                                                              "001 " + client + " :Welcome to the Internet Relay Network, " + text + "\n"
+#define RPL_WELCOME(client, text)	                                                                "001 " + client + " :Welcome to the Internet Relay Network, " + text + "\n"
 #define RPL_YOURHOST(client)		                                                                "002 " + client + " :Your host is EasyRC, running version v0.1\n"
 #define RPL_CREATED(client, date)	                                                              "003 " + client + " :This server was created " + date
 #define RPL_MYINFO(client)		                                                                  "004 " + client + " EasyRC v0.1 N/A N/A\n"
@@ -12,8 +11,9 @@
 #define RPL_TOPIC(client, channel, topic)	                                                      "332" + client + " " + channel + " :" + topic + "\n"
 #define RPL_WHOREPLY(client, channel, username, hostname, serverhostname, nickname, realname)   "352 " + client + ":" + channel + " " + username + " " + hostname + " " + serverhostname + " " + nickname + " H :0 " + realname + "\n"
 #define RPL_NAMREPLY(client, channel, users)			                                              "353 " + client + " = " + channel + " :" + users + "\n"
-#define RPL_ENDOFNAMES(client, channel)					                                                "366 " + client + " " + channel + " :End of /NAMES list.\n"
+#define RPL_ENDOFNAMES(client, channel)					                                                "366 " + client + " " + channel + " :End of /NAMES list\n"
 #define ERR_ERRONEUSNICKNAME(client, nick)                                                      "432 " + client + " " + nick + " :Erroneus nickname\n"
+#define ERR_NOSUCHCHANNEL(client, channel)                                                      "403 " + client + " " + channel + " :No such channel\n"
 #define ERR_NICKNAMEINUSE(client, nick)                                                         "433 " + client + " " + nick + " :Nickname is already in use\n"
 #define ERR_NEEDMOREPARAMS(client, command)                                                     "461 " + client + " " + command + ":Not enough parameters\n"
 #define ERR_ALREADYREGISTERED(client)                                                           "462 " + client + " :You may not reregister\n"
@@ -23,7 +23,8 @@
 #define RPL_JOIN(prefix, target)	":" + prefix + " JOIN " + target + "\n"
 #define RPL_PART(prefix, target)	":" + prefix + " PART " + target + "\n"
 
-
+//QUIT
+#define QUIT(prefix)                        ":" + prefix + " QUIT : Quit: Bye for now!\r\n"
 //MODES
 
 #define RPL_ADDOP(prefix, target, msg)		":" + prefix + " MODE " + target + " +o " + msg + "\n"
@@ -36,4 +37,8 @@
 #define RPL_REMINV(prefix, target)			":EasyRC.gg MODE " + target + " -i\n"
 #define RPL_ADDTOP(prefix, target)			":" + prefix + " MODE " + target + " +t\n"
 #define RPL_REMTOP(prefix, target)			":" + prefix + " MODE " + target + " -t\n"
+
+
+//PING
+#define PONG(buffer)                        "PONG " + buffer + "\n"
 
