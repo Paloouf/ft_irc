@@ -376,8 +376,7 @@ void	Channel::deleteUser(Client *client)
 	for (unsigned i = 0; i < _admins.size(); i++)
 	{
 		if (_admins[i]->getFd() == client->getFd())
-		{
-           
+    {
 			_admins.erase(_admins.begin() + i);
 			i = 0;
 		}

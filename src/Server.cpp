@@ -57,8 +57,12 @@ void	Server::listening()
 	listen(_sockfd, 8);
 	std::cout << "Waiting for connection...\n\n";
 	createFd();
-	while (1)
+	
+	while (1){
+		
 		waitInput();
+		
+	}
 }
 
 //DATA REPLYING//
@@ -130,6 +134,7 @@ void	Server::waitInput(){
 		}
 		else if (i != 0 && !_clients[i - 1]->getSend().empty())
 		{
+
 			std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
 			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
 			_clients[i - 1]->resetSend();

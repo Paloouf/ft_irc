@@ -144,6 +144,7 @@ void	Client::setPrefix(){
 void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
+
 	//std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
 	std::string	message;
 	if (command.size() > 4 && command.substr(0,5) == "PING ")
@@ -354,7 +355,7 @@ void	Client::changeTopic(std::string command)
 }
 
 void	Client::sendBuffer(std::string buffer)
-{		
+{
 	_send.append(buffer);
 }
 
