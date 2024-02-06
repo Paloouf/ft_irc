@@ -8,13 +8,15 @@ class Channel;
 class Server{
 	private:
 		Server(){};
+		
+		int	_sockfd;
 		std::string _port;
 		std::string _password;
 		std::string _date;
 		std::vector<Client*> _clients;
 		std::map<std::string, Channel*> _chanMap;
 		struct pollfd	*_clientsFd;
-		int	_sockfd;
+		
 		void	parseBuffer(char* buffer, Client* client);
 		void	sendWelcome(Client* client);
 		void	listening();
@@ -35,9 +37,11 @@ class Server{
 		void					whoReply(Client* client, char* buffer);
 		void					replyChannel(Client* client, char* buffer);
 		void					replyUser(Client* client, char* buffer);
+    	void					deleteChannel(std::string);
 		void					broadcast(std::string message);
 		std::string 			getDate(){return _date;}
 		std::string 			getPassword(){return _password;}
 		std::string 			getPort(){return _port;}
 		std::vector<Client*>	&getClient(){return _clients;}
+		std::map<std::string, Channel*>	&getChan(){return _chanMap;}
 };

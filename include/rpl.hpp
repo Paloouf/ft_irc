@@ -18,11 +18,15 @@
 #define RPL_WHOREPLY(client, channel, username, hostname, serverhostname, nickname, realname)       "352 " + client + ":" + channel + " " + username + " " + hostname + " " + serverhostname + " " + nickname + " H :0 " + realname + "\n"
 #define RPL_YOURHOST(client)		                                                                "002 " + client + " :Your host is EasyRC, running version v0.1\n"
 #define ERR_ERRONEUSNICKNAME(client, nick)                                                          "432 " + client + " " + nick + " :Erroneus nickname\n"
+#define ERR_NOSUCHCHANNEL(client, channel)                                                      "403 " + client + " " + channel + " :No such channel\n"
 #define ERR_NICKNAMEINUSE(client, nick)                                                             "433 " + client + " " + nick + " :Nickname is already in use\n"
 #define ERR_NEEDMOREPARAMS(client, command)                                                         "461 " + client + " " + command + ":Not enough parameters\n"
 #define ERR_ALREADYREGISTERED(client)                                                               "462 " + client + " :You may not reregister\n"
 #define ERR_PASSWDMISMATCH(client)                                                                  "464 " + client + " :Password incorrect\n"
 #define NEW_NICK(old, newnick)                  ":" + old + " NICK " + newnick + "\n"
+
+//QUIT
+#define QUIT(prefix)                        ":" + prefix + " QUIT : Quit: Bye for now!\r\n"
 
 //MODES
 #define RPL_ADDOP(prefix, target, msg)		    ":" + prefix + " MODE " + target + " +o " + msg + "\n"
@@ -35,3 +39,6 @@
 #define RPL_REMINV(prefix, target)			    ":EasyRC.gg MODE " + target + " -i\n"
 #define RPL_ADDTOP(prefix, target)			    ":" + prefix + " MODE " + target + " +t\n"
 #define RPL_REMTOP(prefix, target)			    ":" + prefix + " MODE " + target + " -t\n"
+
+//PING
+#define PONG(buffer)                        "PONG " + buffer + "\n"

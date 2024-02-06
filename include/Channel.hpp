@@ -13,13 +13,13 @@ class Channel{
 		~Channel();
 
 
-    std::vector<Client*>	&getClient(){return _clients;}
-    std::vector<Client*>	&getAdmins(){return _admins;}
+    	std::vector<Client*>	&getClient(){return _clients;}
+    	std::vector<Client*>	&getAdmins(){return _admins;}
+		Server*		getServer() {return _server;}
 		std::string getName()const {return _name;}
 		std::string getTopic() const {return _topic;}
 		std::string getPass() const {return _pass;}
 		void	setLimit(Client*, std::string);
-		bool	isAdmin(Client* client);
 		void	setPass(std::string pass){_pass = pass;}
 		void	join(Client* client);
 		void	update(Client* client);
@@ -31,6 +31,7 @@ class Channel{
 		void	setTopic(std::string topic) {_topic = topic;}
 		void	broadcast(std::string message);
 		void	deleteUser(Client *client);
+		bool	isAdmin(Client* client);
 
 	private:
 		Channel();

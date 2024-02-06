@@ -85,13 +85,13 @@ void	Server::replyChannel(Client* client, char* buffer)
 			{
 				message = RPL_WHOREPLY(client->getHostname(), (*it).second->getName(), (*itt)->getUser(), (*itt)->getHostname(), "EasyRC.gg", (*itt)->getNick(), (*itt)->getFullName());
 				std::cout << "Responding to client " << client->getFd() << " with message " << message;
-				send(client->getFd(), message.c_str(), message.size(), 0);
+				client->sendBuffer(message);
 			}
 		}
 	}
 	message = RPL_ENDOFWHO(client->getHostname(), buffer);
 	std::cout << "Responding to client " << client->getFd() << " with message " << message;
-	send(client->getFd(), message.c_str(), message.size(), 0);
+	client->sendBuffer(message);
 }
 
 void	Server::replyUser(Client* client, char* buffer)
@@ -105,16 +105,16 @@ void	Server::replyUser(Client* client, char* buffer)
 		{
 			message = RPL_WHOREPLY(client->getHostname(), (*it)->getFirstChannel(), (*it)->getUser(), (*it)->getHostname(), "EasyRC.gg", (*it)->getNick(), (*it)->getFullName());
 			std::cout << "Responding to client " << client->getFd() << " with message " << message;
-			send(client->getFd(), message.c_str(), message.size(), 0);
+			client->sendBuffer(message);
 		}
 	}
 	message = RPL_ENDOFWHO(client->getHostname(), buffer);
 	std::cout << "Responding to client " << client->getFd() << " with message " << message;
-	send(client->getFd(), message.c_str(), message.size(), 0);
+	client->sendBuffer(message);
 }
 
 void	Server::waitInput(){
-	int val = poll(_clientsFd, _clients.size() + 1, -1);
+	int val = poll(_clientsFd, _clients.size() + 1, 1);
 	if (val < 0)
 		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
@@ -127,6 +127,12 @@ void	Server::waitInput(){
 			}
 			else
 				receiveData(this->_clients[i - 1]);
+		}
+		else if (i != 0 && !_clients[i - 1]->getSend().empty())
+		{
+			std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
+			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
+			_clients[i - 1]->resetSend();
 		}
 	}
 }
@@ -171,25 +177,22 @@ void	Server::addClient()
 
 void	Server::deleteClient(Client* client)
 {
-
 	int i = 0;
 	std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
-	while (_chanMap.size() > 0 && ite != _chanMap.end())
+	while (ite != _chanMap.end())
 	{
 		ite->second->deleteUser(client);
-		std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-		std::string quit = ":" + prefix + " QUIT : Quit: Bye for now!\r\n";
-		for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
-		{
-			if ((*it)->getFd() != client->getFd())
-				send((*it)->getFd(), quit.c_str(), quit.size(), 0);
-		}
+
+		std::string quit = QUIT(client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname()));
+		broadcast(quit);
 		if ((*ite->second).getClient().empty())
 		{
 			delete ite->second;
 			_chanMap.erase(ite);
 			ite = _chanMap.begin();
 		}
+		else
+			break;
 		ite++;
 	}
 	std::vector<Client*>::iterator it = _clients.begin();
@@ -224,20 +227,21 @@ void	Server::receiveData(Client *client){
 void	Server::checkChannel(Client *client, std::string buffer){
 	if (_chanMap.find(buffer) != _chanMap.end())
 	{
-		//Need to RPL to join chan + topic if any + client list
-		//Need to add client to vector of channel
 		_chanMap[buffer]->join(client);
 		_chanMap[buffer]->update(client);
-		//std::cout << buffer << "pipou\n";
 	}
 	else{
 		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
-		//Need to send RPL_channel created for Konversation to create a chan
 	}
 }
 
 void	Server::broadcast(std::string message)
 {
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
-		send((*it)->getFd(), message.c_str(), message.size(), 0);
+		(*it)->sendBuffer(message);
+}
+
+void	Server::deleteChannel(std::string name){
+	delete _chanMap[name];
+	_chanMap.erase(name);
 }

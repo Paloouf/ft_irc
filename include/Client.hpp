@@ -10,27 +10,38 @@ class Client{
 		~Client();
 		Client&	operator=(const Client& ref);
 
+		void	sendBuffer(std::string buffer);
+		void	resetSend();
+		void	sendWelcome();
 		void	addBuffer(char *buffer);
+		void	resetBuffer();
 		void	parseBuffer(char *buffer);
 		void	parseNego(char *buffer);
 		void	parseMsg(char *buffer);
-		void	resetBuffer();
-		void	sendWelcome();
+		void	changeNick(std::string nick);
+		void	pongReply(std::string buffer);
+		void	privMsg(std::string command);
+		void	changeTopic(std::string command);
+		void	deleteChan(Channel *channel);
+		bool	checkNick(std::string nick);
+		bool	checkDoubleNick(std::string nick);
+		bool	checkDoubleUser(const char* user);
+
 
 		//GETTERS
 		int	getFd() const{return _fd;}
-		std::string const &	getHostname() const{return _hostname;}
 		int	getPort() const {return _port;}
 		int getNego() const {return _negoCount;}
 		Server*		getServer() {return _server;}
 		std::string getNick() const {return _nick;}
 		std::string getUser() const {return _user;}
+		std::string getSend() const {return _send;}
 		std::string getHost() const {return _hostname;}
 		std::string getFullName() const {return _fullName;}
 		std::string getCommand() const {return _command;}
 		std::string getPrefix() const {return _prefix;}
-
-    std::string getFirstChannel() const;
+		std::string const &	getHostname() const{return _hostname;}
+   		std::string getFirstChannel() const;
 		std::vector<Channel*> &getChan()  {return _chan;}
 
 
@@ -40,10 +51,6 @@ class Client{
 		void	setUser(const std::string user){this->_user = user;}
 		void	setHost(const std::string hostname){this->_hostname = hostname;}
 		void	setFullName(const std::string fullName){this->_fullName = fullName;}
-		void	deleteChan(Channel *channel);
-		bool	checkNick(std::string nick);
-		bool	checkDoubleNick(std::string nick);
-		bool	checkDoubleUser(const char* user);
 		void	setPrefix();
 
 	private:
@@ -51,11 +58,12 @@ class Client{
 		int	_fd;
 		int	_negoCount;
 		int	_port;
+		std::string _send;
 		std::string _fullName;
 		std::string _user;
 		std::string _nick;
 		std::string _prefix;
 		std::string _command;
 		std::string _hostname;		
-		std::vector<Channel*> _chan;	
+		std::vector<Channel*> _chan;
 };
