@@ -134,14 +134,9 @@ void	Server::waitInput(){
 		}
 		else if (i != 0 && !_clients[i - 1]->getSend().empty())
 		{
-			//std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
-			// std::stringstream sBuff(_clients[i - 1]->getSend());
-			// std::string buff;
-			// while (getline(sBuff, buff)){
-			// 	buff += '\n';
-				std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
-				send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
-			//}
+
+			std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
+			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
 			_clients[i - 1]->resetSend();
 		}
 	}
