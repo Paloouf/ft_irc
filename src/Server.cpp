@@ -217,7 +217,7 @@ void	Server::deleteClient(Client* client)
 
 void	Server::receiveData(Client *client){
 	char	buffer[8192];
-	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+	int err = recv(client->getFd(), buffer, sizeof(buffer), 0);
 	if (buffer[err - 1] != '\n')
 	{
 		client->addBuffer(buffer);
@@ -225,6 +225,7 @@ void	Server::receiveData(Client *client){
 	}
 	buffer[err] = '\0';
 	client->parseBuffer(buffer);
+	memset(buffer, 0, sizeof(buffer));
 }
 
 //CHANNEL CHECK//
