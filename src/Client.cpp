@@ -75,12 +75,11 @@ void	Client::parseBuffer(char * buffer)
 		parseMsg(buffer);
 }
 
+
 void	Client::parseNego(char *buffer)
 {
 	std::string command = buffer;
 	addBuffer(buffer);
-	if(getCommand().find('\n') == std::string::npos)
-		return;
 	std::stringstream 	sBuff(getCommand());
 	std::string			message;
 	while (getline(sBuff, command))
@@ -144,12 +143,9 @@ void	Client::setPrefix(){
 
 void	Client::parseMsg(char *buffer)
 {
-	
-	addBuffer(buffer);
-	if(getCommand().find('\n') == std::string::npos)
-		return;
-	//std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
-	std::string command = getCommand();
+	std::string command = buffer;
+
+	std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
 	std::string	message;
 	if (command.size() > 4 && command.substr(0,5) == "PING ")
 		pongReply(command.substr(5));
@@ -252,7 +248,8 @@ void	Client::parseMsg(char *buffer)
 		//sendBuffer(ERR)
 		
 	}
-  resetBuffer();
+
+
 }
 
 std::string	Client::getFirstChannel() const
