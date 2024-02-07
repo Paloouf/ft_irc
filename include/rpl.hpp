@@ -31,6 +31,7 @@
 #define ERR_NEEDMOREPARAMS(client, command)                                                         "461 " + client + " " + command + ":Not enough parameters\n"
 #define ERR_ALREADYREGISTERED(client)                                                               "462 " + client + " :You may not reregister\n"
 #define ERR_PASSWDMISMATCH(client)                                                                  "464 " + client + " :Password incorrect\n"
+#define ERR_BADCHANNELKEY(client, channel)                                                         "475 " + client + " " + channel + ":Cannot join channel (+k)\n"
 #define ERR_CHANNELISFULL(client, channel)                                                          "471 " + client + " " + channel + " :Cannot join channel (+l)\n"
 #define ERR_INVITEONLY(client, channel)                                                             "473 " + client + " " + channel + " :Cannot join channel (+i)\n"
 #define NEW_NICK(old, newnick)                  ":" + old + " NICK " + newnick + "\n"
