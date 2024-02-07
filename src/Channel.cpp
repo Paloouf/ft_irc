@@ -19,35 +19,42 @@ Channel::~Channel(){
 
 void Channel::join(Client* client){
     if (!_l || _limit >= _clients.size() + 1){
-        std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-        std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
-        client->sendBuffer(join);
-        if (!_topic.compare(""))
-        {
-            std::string topic = RPL_NOTOPIC(client->getNick(), this->getName());
-            client->sendBuffer(topic);
-        }
-        else{
-            std::string topic = RPL_TOPIC(client->getNick(), this->getName(), this->getTopic());
-            client->sendBuffer(topic);
-        }
-        _clients.push_back(client);
-        client->getChan().push_back(this);
-        std::string names;
-        for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-        for(std::vector<Client*>::iterator itt = _admins.begin(); itt != _admins.end(); itt++){
-            if ((*itt)->getFd() == (*it)->getFd()){
-                names += "@";
-                //it++;
+        if (!_i || (_i && _invited.find(client->getNick()) != _invited.end())){
+            std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
+            std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
+            client->sendBuffer(join);
+            if (!_topic.compare(""))
+            {
+                std::string topic = RPL_NOTOPIC(client->getNick(), this->getName());
+                client->sendBuffer(topic);
             }
+            else{
+                std::string topic = RPL_TOPIC(client->getNick(), this->getName(), this->getTopic());
+                client->sendBuffer(topic);
+            }
+            _clients.push_back(client);
+            client->getChan().push_back(this);
+            std::string names;
+            for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
+            for(std::vector<Client*>::iterator itt = _admins.begin(); itt != _admins.end(); itt++){
+                if ((*itt)->getFd() == (*it)->getFd()){
+                    names += "@";
+                    //it++;
+                }
+            }
+                names += (*it)->getNick() + " ";
+            }
+            std::string userlist = RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str());
+            client->sendBuffer(userlist);
+            std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
+            client->sendBuffer(endofnames);
+            update(client);
         }
-            names += (*it)->getNick() + " ";
-        }
-        std::string userlist = RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str());
-        client->sendBuffer(userlist);
-        std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
-        client->sendBuffer(endofnames);
+        else
+            client->sendBuffer(ERR_INVITEONLY(client->getPrefix(), getName()));
     }
+    else
+        client->sendBuffer(ERR_CHANNELISFULL(client->getPrefix(), getName()));
 }
 
 void	Channel::update(Client *client){

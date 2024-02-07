@@ -237,7 +237,7 @@ void	Server::checkChannel(Client *client, std::string buffer){
 	if (_chanMap.find(buffer) != _chanMap.end())
 	{
 		_chanMap[buffer]->join(client);
-		_chanMap[buffer]->update(client);
+		//_chanMap[buffer]->update(client);
 	}
 	else{
 		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));

@@ -232,10 +232,20 @@ void	Client::parseMsg(char *buffer)
 		std::cout << "MSG d'INVITE: " << target << " " << channelName << std::endl;
 		for(std::vector<Client*>::iterator it = getServer()->getClient().begin(); it != getServer()->getClient().end();it++){
 			if ((*it)->getNick() == target){
-				(*it)->sendBuffer(RPL_INVITING(getPrefix(), target, channelName));
-				//NEED TO ADD CONDITIONS TO JOIN IF _i == true, et add le (*it) dans un vecteur invite du chan en question
+				for(std::vector<Channel*>::iterator chanIt = _chan.begin(); chanIt != _chan.end(); chanIt++){
+					if ((*chanIt)->getName() == channelName){
+						(*it)->sendBuffer(RPL_INVITING(getPrefix(), target, channelName));
+						(*chanIt)->getInvited().insert(make_pair(target, *it));
+						return ;
+					}
+					//getServer()->checkChannel((*it), (*chanIt)->getName());
+				}
+				//LE CLIENT QUI INVITE IS NOT ON CHANNEL
+				sendBuffer(ERR_NOTONCHANNEL(getPrefix(), channelName));
+				//NEED TO ADD CONDITIONS TO JOIN IF _i == true, et add le target dans un vecteur invite du chan en question
 			}
 		}
+		//sendBuffer(ERR)
 		
 	}
 
