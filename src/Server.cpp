@@ -178,25 +178,28 @@ void	Server::addClient()
 void	Server::deleteClient(Client* client)
 {
 	int i = 0;
-	std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
-	while (ite != _chanMap.end())
-	{
-		ite->second->deleteUser(client);
-
-		std::string quit = QUIT(client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname()));
-		broadcast(quit);
-		if ((*ite->second).getClient().empty())
+	std::cout << "yo\n";
+	if (_chanMap.size() > 0){
+		std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
+		while (ite != _chanMap.end())
 		{
-			delete ite->second;
-			_chanMap.erase(ite);
-			ite = _chanMap.begin();
+			ite->second->deleteUser(client);
+			std::string quit = QUIT(client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname()));
+			broadcast(quit);
+			if ((*ite->second).getClient().empty())
+			{
+				delete ite->second;
+				_chanMap.erase(ite);
+				ite = _chanMap.begin();
+			}
+			else
+				break;
+			ite++;
 		}
-		else
-			break;
-		ite++;
 	}
 	std::vector<Client*>::iterator it = _clients.begin();
 	i = 0;
+	std::cout << "yo2\n";
 	while((*it)->getFd() != client->getFd())
 	{
 		it++;
@@ -205,6 +208,7 @@ void	Server::deleteClient(Client* client)
 	_clients.erase(_clients.begin() + i);
 	close(client->getFd());
 	delete client;
+	std::cout << "yo\n";
 	createFd();
 }
 

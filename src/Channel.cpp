@@ -404,8 +404,8 @@ void	Channel::deleteUser(Client *client)
         std::string servname = "EasyRC.gg";
         broadcast(RPL_ADDOP(servname, getName(), _clients[0]->getNick()));
 	}
-	if (_clients.size() == 0){
-		getServer()->deleteChannel(getName());
-    }
+	// if (_clients.size() == 0){
+	// 	getServer()->deleteChannel(getName());
+    // }
 }
 
