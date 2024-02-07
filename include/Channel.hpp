@@ -15,10 +15,12 @@ class Channel{
 
     	std::vector<Client*>	&getClient(){return _clients;}
     	std::vector<Client*>	&getAdmins(){return _admins;}
+		std::map<std::string, Client*> &getInvited(){return _invited;}
 		Server*		getServer() {return _server;}
 		std::string getName()const {return _name;}
 		std::string getTopic() const {return _topic;}
 		std::string getPass() const {return _pass;}
+		bool	const &getChanK() const {return _k;}
 		void	setLimit(Client*, std::string);
 		void	setPass(std::string pass){_pass = pass;}
 		void	join(Client* client);
@@ -49,6 +51,7 @@ class Channel{
 		Client*			_creator;
 		std::vector<Client*> 	_admins;
 		std::vector<Client*> 	_clients;
+		std::map<std::string, Client*>	_invited;
 
 };
 

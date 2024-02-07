@@ -6,7 +6,7 @@
 #define RPL_CREATED(client, date)	                                                                "003 " + client + " :This server was created " + date
 #define RPL_ENDOFWHO(client, mask)                                                                  "315 " + client + " " + mask + " :End of WHO list\n"
 #define RPL_ENDOFNAMES(client, channel)					                                            "366 " + client + " " + channel + " :End of /NAMES list.\n"
-#define RPL_INVITING(prefix, nick, target)      ":" + prefix + " " + nick + " " + target + "\n"
+#define RPL_INVITING(prefix, nick, target)      ":" + prefix + " INVITE " + nick + " " + target + "\n"
 #define RPL_JOIN(prefix, target)	            ":" + prefix + " JOIN " + target + "\n"
 #define RPL_KICK(prefix, channel, target)       ":" + prefix + " KICK " + channel + " " + target + "\n"
 #define RPL_MYINFO(client)		                                                                    "004 " + client + " EasyRC v0.1 N/A N/A\n"
@@ -27,9 +27,13 @@
 #define ERR_ERRONEUSNICKNAME(client, nick)                                                      "432 " + client + " " + nick + " :Erroneus nickname\n"
 #define ERR_NOSUCHCHANNEL(client, channel)                                                      "403 " + client + " " + channel + " :No such channel\n"
 #define ERR_NICKNAMEINUSE(client, nick)                                                             "433 " + client + " " + nick + " :Nickname is already in use\n"
+#define ERR_NOTONCHANNEL(client, channel)                                                       "442 " + client + " " +  channel + " :You're not on that channel\n"
 #define ERR_NEEDMOREPARAMS(client, command)                                                         "461 " + client + " " + command + ":Not enough parameters\n"
 #define ERR_ALREADYREGISTERED(client)                                                               "462 " + client + " :You may not reregister\n"
 #define ERR_PASSWDMISMATCH(client)                                                                  "464 " + client + " :Password incorrect\n"
+#define ERR_BADCHANNELKEY(client, channel)                                                         "475 " + client + " " + channel + ":Cannot join channel (+k)\n"
+#define ERR_CHANNELISFULL(client, channel)                                                          "471 " + client + " " + channel + " :Cannot join channel (+l)\n"
+#define ERR_INVITEONLY(client, channel)                                                             "473 " + client + " " + channel + " :Cannot join channel (+i)\n"
 #define NEW_NICK(old, newnick)                  ":" + old + " NICK " + newnick + "\n"
 
 //QUIT

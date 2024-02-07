@@ -229,7 +229,30 @@ void	Client::parseMsg(char *buffer)
 				return;
 		}
 	}
-	resetBuffer();
+	if (command.substr(0,7) == "INVITE "){
+		std::stringstream buff(command);
+		std::string cmd, target, channelName;
+		buff >> cmd >> target >> channelName;
+		std::cout << "MSG d'INVITE: " << target << " " << channelName << std::endl;
+		for(std::vector<Client*>::iterator it = getServer()->getClient().begin(); it != getServer()->getClient().end();it++){
+			if ((*it)->getNick() == target){
+				for(std::vector<Channel*>::iterator chanIt = _chan.begin(); chanIt != _chan.end(); chanIt++){
+					if ((*chanIt)->getName() == channelName){
+						(*it)->sendBuffer(RPL_INVITING(getPrefix(), target, channelName));
+						(*chanIt)->getInvited().insert(make_pair(target, *it));
+						return ;
+					}
+					//getServer()->checkChannel((*it), (*chanIt)->getName());
+				}
+				//LE CLIENT QUI INVITE IS NOT ON CHANNEL
+				sendBuffer(ERR_NOTONCHANNEL(getPrefix(), channelName));
+				//NEED TO ADD CONDITIONS TO JOIN IF _i == true, et add le target dans un vecteur invite du chan en question
+			}
+		}
+		//sendBuffer(ERR)
+		
+	}
+  resetBuffer();
 }
 
 std::string	Client::getFirstChannel() const
@@ -320,27 +343,34 @@ void	Client::changeNick(std::string nick)
 void	Client::privMsg(std::string command)
 {
 	char* commandbis = &command[8];
-		std::string target = strtok(commandbis, " ");
-		if (target[0] == '#'){
-			for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
-				if ((*it)->getName() == target){
-					(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
-				}
+	std::string target = strtok(commandbis, " ");
+	if (target[0] == '#'){
+		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
+			if ((*it)->getName() == target){
+				(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
 			}
 		}
-		else{
-			std::cout << target << std::endl;
-			std::stringstream buff;
-			buff << command;
-			std::string	cmd, cible, message;
-			buff >> cmd >> cible >> message;
-			message = message.substr(1);
-			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
-				if ((*it)->getNick() == target){
-					(*it)->sendBuffer(RPL_AWAY(getNick(), cible, message));
-				}
+	}
+	else{
+		std::string cmd, msg, cible;
+		if (command.find(":") == std::string::npos)
+		{
+			cible = "412 :" + getNick() + " " + ":No text to send\n";
+			sendBuffer(cible);
+			return;
+		}
+		std::string message;
+		message = command.substr(command.find(":"));
+		std::stringstream buff;
+		buff << command;
+		buff >> cmd >> msg;
+		cible = ":" + getNick() + " " + cmd + " " + target + " " + message + "\n";
+		for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
+			if ((*it)->getNick() == target){
+				(*it)->sendBuffer(cible);
 			}
 		}
+	}
 }
 
 void	Client::changeTopic(std::string command)
@@ -353,7 +383,6 @@ void	Client::changeTopic(std::string command)
 	if(getServer()->getChan().find(argument) == getServer()->getChan().end())
 	{
 		message = ERR_NOSUCHCHANNEL(getHostname(), command);
-		
 	}
 
 }
