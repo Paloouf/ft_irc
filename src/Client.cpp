@@ -144,7 +144,8 @@ void	Client::setPrefix(){
 void	Client::parseMsg(char *buffer)
 {
 	std::string command = buffer;
-	//std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
+
+	std::cout << "MSG[" << getFd() << "]:" << command << std::endl;
 	std::string	message;
 	if (command.size() > 4 && command.substr(0,5) == "PING ")
 		pongReply(command.substr(5));
@@ -224,6 +225,30 @@ void	Client::parseMsg(char *buffer)
 				return;
 		}
 	}
+	if (command.substr(0,7) == "INVITE "){
+		std::stringstream buff(command);
+		std::string cmd, target, channelName;
+		buff >> cmd >> target >> channelName;
+		std::cout << "MSG d'INVITE: " << target << " " << channelName << std::endl;
+		for(std::vector<Client*>::iterator it = getServer()->getClient().begin(); it != getServer()->getClient().end();it++){
+			if ((*it)->getNick() == target){
+				for(std::vector<Channel*>::iterator chanIt = _chan.begin(); chanIt != _chan.end(); chanIt++){
+					if ((*chanIt)->getName() == channelName){
+						(*it)->sendBuffer(RPL_INVITING(getPrefix(), target, channelName));
+						(*chanIt)->getInvited().insert(make_pair(target, *it));
+						return ;
+					}
+					//getServer()->checkChannel((*it), (*chanIt)->getName());
+				}
+				//LE CLIENT QUI INVITE IS NOT ON CHANNEL
+				sendBuffer(ERR_NOTONCHANNEL(getPrefix(), channelName));
+				//NEED TO ADD CONDITIONS TO JOIN IF _i == true, et add le target dans un vecteur invite du chan en question
+			}
+		}
+		//sendBuffer(ERR)
+		
+	}
+
 
 }
 
@@ -360,7 +385,7 @@ void	Client::changeTopic(std::string command)
 }
 
 void	Client::sendBuffer(std::string buffer)
-{		
+{
 	_send.append(buffer);
 }
 

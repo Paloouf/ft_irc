@@ -57,8 +57,12 @@ void	Server::listening()
 	listen(_sockfd, 8);
 	std::cout << "Waiting for connection...\n\n";
 	createFd();
-	while (1)
+	
+	while (1){
+		
 		waitInput();
+		
+	}
 }
 
 //DATA REPLYING//
@@ -130,6 +134,7 @@ void	Server::waitInput(){
 		}
 		else if (i != 0 && !_clients[i - 1]->getSend().empty())
 		{
+
 			std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
 			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
 			_clients[i - 1]->resetSend();
@@ -225,6 +230,7 @@ void	Server::receiveData(Client *client){
 //CHANNEL CHECK//
 
 void	Server::checkChannel(Client *client, std::string buffer){
+
 	std::stringstream buff;
 	buff << buffer;
 	std::string channel, pass;
@@ -237,14 +243,14 @@ void	Server::checkChannel(Client *client, std::string buffer){
 			std::cout << "channel:" << _chanMap[channel]->getName() << " " << "pass:" << _chanMap[channel]->getPass() << '\n';
 			if (_chanMap[channel]->getPass() == pass){
 				_chanMap[channel]->join(client);
-				_chanMap[channel]->update(client);
+				//_chanMap[channel]->update(client);
 			}else{
 				client->sendBuffer(ERR_BADCHANNELKEY(client->getPrefix(), channel));
 			}
 		}
 		else{
 			_chanMap[channel]->join(client);
-			_chanMap[channel]->update(client);
+			//_chanMap[channel]->update(client);
 		}
 	}
 	else{

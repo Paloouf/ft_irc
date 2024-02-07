@@ -15,6 +15,7 @@ class Channel{
 
     	std::vector<Client*>	&getClient(){return _clients;}
     	std::vector<Client*>	&getAdmins(){return _admins;}
+		std::map<std::string, Client*> &getInvited(){return _invited;}
 		Server*		getServer() {return _server;}
 		std::string getName()const {return _name;}
 		std::string getTopic() const {return _topic;}
@@ -50,6 +51,7 @@ class Channel{
 		Client*			_creator;
 		std::vector<Client*> 	_admins;
 		std::vector<Client*> 	_clients;
+		std::map<std::string, Client*>	_invited;
 
 };
 
