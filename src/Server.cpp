@@ -46,6 +46,9 @@ Server::~Server(){
 	for (unsigned i = 0; i < _clients.size();i++){
 		delete _clients[i];
 	}
+	for (std::map<std::string, Channel*>::iterator it =_chanMap.begin(); it != _chanMap.end();it++){
+		delete (it->second);
+	}
 	_chanMap.clear();
 	delete [] _clientsFd;
 	std::cout << "Server dead\n";}
