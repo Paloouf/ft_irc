@@ -230,10 +230,14 @@ void	Server::receiveData(Client *client){
 //CHANNEL CHECK//
 
 void	Server::checkChannel(Client *client, std::string buffer){
+	std::stringstream sBuff(buffer);
+	std::string name, pass;
+	sBuff >> name >> pass;
+	std::cout << "pass: " << pass << std::endl;
 	if (_chanMap.find(buffer) != _chanMap.end())
 	{
 		_chanMap[buffer]->join(client);
-		_chanMap[buffer]->update(client);
+		//_chanMap[buffer]->update(client);
 	}
 	else{
 		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
