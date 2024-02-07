@@ -1,7 +1,7 @@
 #include "../include/Server.hpp"
 
 //SERVER LAUNCHING//
-
+int global = 1;
 
 Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL) 
 {
@@ -15,12 +15,20 @@ Server::Server(std::string port, std::string password): _port(port), _password(p
 	listening();
 }
 
+void signalHandler(int signum){
+	std::cout << "Caught ctrl+C signal\n";
+	if (signum == SIGINT)
+		global = 0;
+}
+
 void Server::setTime()
 {
-    std::time_t result = std::time(NULL);
-    struct tm* timeinfo;
+    std::time_t result;
+	time(&result);
+    struct tm* timeinfo = localtime(&result);
 
-    timeinfo = localtime(&result);
+	
+    //timeinfo = localtime(&result);
     _date = asctime(timeinfo);
 }
 
@@ -35,12 +43,20 @@ void		Server::checkInput()
 
 
 Server::~Server(){
+	for (unsigned i = 0; i < _clients.size();i++){
+		delete _clients[i];
+	}
+	_chanMap.clear();
+	delete [] _clientsFd;
 	std::cout << "Server dead\n";}
+
+
 
 //SERVER LISTENING//
 
 void	Server::listening()
 {
+	signal(SIGINT, signalHandler);
 	struct sockaddr_in address;
 	struct in_addr addr;
 	addr.s_addr = INADDR_ANY;
@@ -58,7 +74,7 @@ void	Server::listening()
 	std::cout << "Waiting for connection...\n\n";
 	createFd();
 	
-	while (1){
+	while (global){
 		
 		waitInput();
 		
