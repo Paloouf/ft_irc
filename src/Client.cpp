@@ -373,6 +373,8 @@ void	Client::changeTopic(std::string command)
 	std::stringstream buff;
 	buff << command;
 	buff >> channel >> msg;
+	if (msg.size() > 1)
+		msg = command.substr(command.find(":"));
 	std::cout << "Get topic request from client " << getFd() << " : " << command << std::endl;
 	std::vector<Channel*>::iterator it = _chan.begin();
 	while (it != _chan.end())
