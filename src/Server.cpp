@@ -187,9 +187,9 @@ void	Server::deleteClient(Client* client)
 	while (ite != _chanMap.end())
 	{
 		ite->second->deleteUser(client);
-
-		std::string quit = QUIT(client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser().substr(0,0)) + (client->getHostname().empty() ? "" : "@" + client->getHostname()));
-		broadcast(quit);
+		broadcast(QUIT(client->getPrefix()));
+		if (_chanMap.size() == 0)
+			break;
 		if ((*ite->second).getClient().empty())
 		{
 			delete ite->second;

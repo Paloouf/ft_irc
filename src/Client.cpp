@@ -32,7 +32,6 @@ void	Client::parseBuffer(char * buffer)
 {
 	std::string command = buffer;
 	if (command.substr(0,5) == "QUIT "){
-		std::cout << "cacaprout\n";
 		getServer()->deleteClient(this);
 		return ;
 	}
