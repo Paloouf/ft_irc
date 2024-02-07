@@ -217,7 +217,7 @@ void	Server::deleteClient(Client* client)
 
 void	Server::receiveData(Client *client){
 	char	buffer[8192];
-	int err = recv(client->getFd(), &buffer, sizeof(buffer), 0);
+	int err = recv(client->getFd(), buffer, sizeof(buffer), 0);
 	if (buffer[err - 1] != '\n')
 	{
 		client->addBuffer(buffer);
@@ -225,22 +225,37 @@ void	Server::receiveData(Client *client){
 	}
 	buffer[err] = '\0';
 	client->parseBuffer(buffer);
+	memset(buffer, 0, sizeof(buffer));
 }
 
 //CHANNEL CHECK//
 
 void	Server::checkChannel(Client *client, std::string buffer){
-	std::stringstream sBuff(buffer);
-	std::string name, pass;
-	sBuff >> name >> pass;
-	std::cout << "pass: " << pass << std::endl;
-	if (_chanMap.find(buffer) != _chanMap.end())
+
+	std::stringstream buff;
+	buff << buffer;
+	std::string channel, pass;
+	buff >> channel >> pass;
+	std::cout << "channel:" << channel << " " << "pass:" << pass << '\n';
+	if (_chanMap.find(channel) != _chanMap.end())
 	{
-		_chanMap[buffer]->join(client);
-		//_chanMap[buffer]->update(client);
+		if (_chanMap[channel]->getChanK())
+		{
+			std::cout << "channel:" << _chanMap[channel]->getName() << " " << "pass:" << _chanMap[channel]->getPass() << '\n';
+			if (_chanMap[channel]->getPass() == pass){
+				_chanMap[channel]->join(client);
+				//_chanMap[channel]->update(client);
+			}else{
+				client->sendBuffer(ERR_BADCHANNELKEY(client->getPrefix(), channel));
+			}
+		}
+		else{
+			_chanMap[channel]->join(client);
+			//_chanMap[channel]->update(client);
+		}
 	}
 	else{
-		_chanMap.insert(make_pair(buffer, new Channel(this, buffer, client)));
+		_chanMap.insert(make_pair(channel, new Channel(this, channel, client)));
 	}
 }
 

@@ -6,6 +6,7 @@
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
+#include <iterator>
 #include <iomanip>
 #include <iostream>
 #include <map>

@@ -95,7 +95,7 @@ void	Channel::sendMode(Client *client, std::string target, std::string mode, std
 }
 
 void    Channel::parseMode(Client *client, std::string target, std::string buff){
-	std::stringstream smodes(buff);
+    std::stringstream smodes(buff);
 	std::string modes, param;
 	std::vector<std::string> params;
 	smodes >> modes;
@@ -273,6 +273,7 @@ void    Channel::addMode(Client *client,std::string add, std::vector<std::string
             switch(c){
                 case 'k':{
                     std::cout << "Mode K\n";
+                    _k = true;
                     setPass((*it));
                     broadcast(RPL_ADDPASS(client->getPrefix(), getName(), (*it)));
                     it++;
