@@ -191,9 +191,10 @@ void	Server::deleteClient(Client* client)
 		broadcast(QUIT(client->getPrefix()));
 		if (_chanMap.size() == 0)
 			break;
-		ite++;
 		if (size != _chanMap.size())
 			ite = _chanMap.begin();
+		else
+			ite++;
 	}
 	std::vector<Client*>::iterator it = _clients.begin();
 	i = 0;
