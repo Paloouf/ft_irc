@@ -170,9 +170,7 @@ void	Client::parseMsg(char *buffer)
 	if(command.substr(0,7) == "TOPIC #")
 		changeTopic(command.substr(6));
 	if (command.substr(0,5) == "QUIT ")
-	{
 		_server->deleteClient(this);
-	}
 	if (command.substr(0,5) == "PART "){
 		std::string target = command.substr(command.find("#"), command.find(" "));
 		std::cout << target << std::endl;
@@ -371,16 +369,31 @@ void	Client::privMsg(std::string command)
 
 void	Client::changeTopic(std::string command)
 {
-	std::stringstream	parse(command);
-	std::string			argument;
-	std::string			message;
-	getline(parse, argument, ' ');
+	std::string msg, channel;
+	std::stringstream buff;
+	buff << command;
+	buff >> channel >> msg;
 	std::cout << "Get topic request from client " << getFd() << " : " << command << std::endl;
-	if(getServer()->getChan().find(argument) == getServer()->getChan().end())
+	std::vector<Channel*>::iterator it = _chan.begin();
+	while (it != _chan.end())
 	{
-		message = ERR_NOSUCHCHANNEL(getHostname(), command);
+		if ((*it)->getName() == channel)
+			break;
+		it++;
 	}
-
+	if (it == _chan.end())
+		sendBuffer(ERR_NOTONCHANNEL(getPrefix(), channel));
+	else if(!(*it)->isAdmin(this) && msg.size() > 0)
+		sendBuffer(ERR_CHANOPRIVSNEEDED(getPrefix(), channel));
+	else if((*it)->isAdmin(this) && msg.size() > 0)
+	{
+		if (msg.size() == 1)
+			msg = " ";
+		(*it)->setTopic(msg.substr(1));
+		(*it)->broadcast(RPL_TOPIC(getPrefix(), channel, msg));
+	}
+	else
+		sendBuffer(RPL_TOPIC(getPrefix(), channel, (*it)->getTopic()));	
 }
 
 void	Client::sendBuffer(std::string buffer)

@@ -183,6 +183,7 @@ void	Server::addClient()
 void	Server::deleteClient(Client* client)
 {
 	int i = 0;
+	unsigned int size = _chanMap.size();
 	std::map<std::string, Channel*>::iterator ite = _chanMap.begin();
 	while (ite != _chanMap.end())
 	{
@@ -190,15 +191,9 @@ void	Server::deleteClient(Client* client)
 		broadcast(QUIT(client->getPrefix()));
 		if (_chanMap.size() == 0)
 			break;
-		if ((*ite->second).getClient().empty())
-		{
-			delete ite->second;
-			_chanMap.erase(ite);
-			ite = _chanMap.begin();
-		}
-		else
-			break;
 		ite++;
+		if (size != _chanMap.size())
+			ite = _chanMap.begin();
 	}
 	std::vector<Client*>::iterator it = _clients.begin();
 	i = 0;
