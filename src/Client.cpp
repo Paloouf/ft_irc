@@ -31,12 +31,13 @@ void	Client::resetBuffer()
 void	Client::parseBuffer(char * buffer)
 {
 	std::string command = buffer;
-	if (command.substr(0,5) == "QUIT "){
-		getServer()->deleteClient(this);
-		return ;
-	}
+	if (command.find("\nQUIT ") != std::string::npos){
+			getServer()->deleteClient(this);
+			return ;
+		}
 	if (_negoCount < 4)
 	{
+		
 		try
 			{parseNego(buffer);}
 		catch (Error::wrongPassword& error)

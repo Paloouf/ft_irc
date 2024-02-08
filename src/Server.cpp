@@ -135,7 +135,7 @@ void	Server::replyUser(Client* client, char* buffer)
 }
 
 void	Server::waitInput(){
-	int val = poll(_clientsFd, _clients.size() + 1, 1);
+	int val = poll(_clientsFd, _clients.size() + 1, 100);
 	if (val < 0)
 		std::cout << "Error poll\n";
 	for (unsigned long i = 0; i < _clients.size() + 1; i++)
