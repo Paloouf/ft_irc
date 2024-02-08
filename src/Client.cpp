@@ -369,13 +369,13 @@ void	Client::privMsg(std::string command)
 
 void	Client::changeTopic(std::string command)
 {
-	std::string msg, channel;
+	std::string msg, channel, topic;
 	std::stringstream buff;
 	buff << command;
 	buff >> channel >> msg;
-	if (msg.size() > 1)
+	if (msg.size() > 0)
 		msg = command.substr(command.find(":"));
-	std::cout << "Get topic request from client " << getFd() << " : " << command << std::endl;
+	std::cout << "Get topic request from client " << getFd() << " : " << command << "fin" << std::endl;
 	std::vector<Channel*>::iterator it = _chan.begin();
 	while (it != _chan.end())
 	{
@@ -389,11 +389,19 @@ void	Client::changeTopic(std::string command)
 		sendBuffer(ERR_CHANOPRIVSNEEDED(getPrefix(), channel));
 	else if((*it)->isAdmin(this) && msg.size() > 0)
 	{
+		msg = msg.substr(msg.find_first_not_of(": "));
 		if (msg.size() == 1)
-			msg = " ";
-		(*it)->setTopic(msg.substr(1));
-		(*it)->broadcast(RPL_TOPIC(getPrefix(), channel, msg));
+			msg = "";
+		else
+			std::remove((msg.begin() + msg.find_last_not_of(" \n")), msg.end(), ' ');
+		(*it)->setTopic(msg);
+		if ((*it)->getTopic().empty() || (*it)->getTopic().size() == 1)
+			(*it)->broadcast(RPL_NOTOPIC(getPrefix(), channel));		
+		else
+			(*it)->broadcast(RPL_TOPIC(getPrefix(), channel, msg));
 	}
+	else if ((*it)->getTopic().empty() || (*it)->getTopic().size() == 1)
+		sendBuffer(RPL_NOTOPIC(getPrefix(), channel));		
 	else
 		sendBuffer(RPL_TOPIC(getPrefix(), channel, (*it)->getTopic()));	
 }

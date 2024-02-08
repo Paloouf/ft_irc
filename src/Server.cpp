@@ -78,9 +78,7 @@ void	Server::listening()
 	createFd();
 	
 	while (global){
-		
 		waitInput();
-		
 	}
 }
 

@@ -20,7 +20,7 @@
 #define RPL_MYINFO(client)		                                                                  "004 " + client + " EasyRC v0.1 N/A N/A\n"
 #define RPL_ENDOFWHO(client, mask)                                                              "315 " + client + " " + mask + " :End of WHO list\n"
 #define RPL_NOTOPIC(client, channel)					                                                  "331 " + client + " " + channel + " :No topic is set\n"
-#define RPL_TOPIC(client, channel, topic)	                                                      "332 " + client + " " + channel + " " + topic + "\n"
+#define RPL_TOPIC(client, channel, topic)	                                                      "332 " + client + " " + channel + " :" + topic + "\n"
 #define RPL_WHOREPLY(client, channel, username, hostname, serverhostname, nickname, realname)   "352 " + client + ":" + channel + " " + username + " " + hostname + " " + serverhostname + " " + nickname + " H :0 " + realname + "\n"
 #define RPL_NAMREPLY(client, channel, users)			                                              "353 " + client + " = " + channel + " :" + users + "\n"
 #define ERR_ERRONEUSNICKNAME(client, nick)                                                      "432 " + client + " " + nick + " :Erroneus nickname\n"
@@ -37,7 +37,7 @@
 #define NEW_NICK(old, newnick)                  ":" + old + " NICK " + newnick + "\n"
 
 //QUIT
-#define QUIT(prefix)                        ":" + prefix + " QUIT : Quit: Bye for now!\r\n"
+#define QUIT(prefix)                        ":" + prefix + " QUIT :Quit: Bye for now!\r\n"
 
 //MODES
 #define RPL_ADDOP(prefix, target, msg)		    ":" + prefix + " MODE " + target + " +o " + msg + "\n"
