@@ -348,6 +348,28 @@ void	Client::privMsg(std::string command)
 	}
 	else{
 		std::string cmd, msg, cible;
+		if (command.find("DCC") != std::string::npos)
+		{
+			std::stringstream buff;
+			std::string ignore, file, sendKeyword, ip, port, size;
+			buff << command;
+			buff >> cmd >> ignore >> sendKeyword >> file >> ip >> port >> size;
+			std::string user = ignore.substr(0, ignore.find(":") - 1);
+
+			std::cout << "DEMANDE DE FILE TRANSFER: " << user << " " << command << "\n";
+			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
+				std::cout << "NICKS: " << (*it)->getNick() << "FIN"  << (*it)->getNick().size() << std::endl;
+				std::cout << "USER: " << user << "FIN"  << user.size() << std::endl;
+					if ((*it)->getNick() == user){
+						std::string reply = " DCC ACCEPT " + file + " " + ip + " " + port + " " + size + "\n";
+						std::cout << reply;
+						reply[reply.size() - 2] = '\n';
+						(*it)->sendBuffer(reply);
+					}
+			}
+			//fileTransfer();
+			return;
+		}
 		if (command.find(":") == std::string::npos)
 		{
 			cible = "412 :" + getNick() + " " + ":No text to send\n";
