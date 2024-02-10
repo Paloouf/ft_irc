@@ -358,13 +358,17 @@ void	Client::privMsg(std::string command)
 
 			std::cout << "DEMANDE DE FILE TRANSFER: " << user << " " << command << "\n";
 			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
-				std::cout << "NICKS: " << (*it)->getNick() << "FIN"  << (*it)->getNick().size() << std::endl;
-				std::cout << "USER: " << user << "FIN"  << user.size() << std::endl;
+				//std::cout << "NICKS: " << (*it)->getNick() << "FIN"  << (*it)->getNick().size() << std::endl;
+				//std::cout << "USER: " << user << "FIN"  << user.size() << std::endl;
 					if ((*it)->getNick() == user){
-						std::string reply = " DCC ACCEPT " + file + " " + ip + " " + port + " " + size + "\n";
+						std::string reply = ":" + (*it)->getPrefix() + " PRIVMSG " + getNick() + " :\x01 DCC SEND " + file + " " + ip + " " + port + "\x01";
 						std::cout << reply;
-						reply[reply.size() - 2] = '\n';
+						reply[reply.size() - 2] = '\0';
 						(*it)->sendBuffer(reply);
+						std::string reply2 = ":" + (*it)->getPrefix() + " NOTICE " + (*it)->getNick() + " :\x01 DCC SEND " + file + " " + ip + " " + port + "\x01";
+						std::cout << reply2;
+						reply2[reply2.size() - 2] = '\0';
+						sendBuffer(reply2);
 					}
 			}
 			//fileTransfer();
