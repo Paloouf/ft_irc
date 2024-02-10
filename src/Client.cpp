@@ -350,19 +350,29 @@ void	Client::privMsg(std::string command)
 	}
 	else{
 		std::string cmd, msg, cible;
-		if (command.find(":DCC"))
+		if (command.find("DCC") != std::string::npos)
 		{
 			std::stringstream buff;
 			std::string ignore, file, sendKeyword, ip, port, size;
 			buff << command;
 			buff >> cmd >> ignore >> sendKeyword >> file >> ip >> port >> size;
-			std::string user = ignore.substr(0, ignore.find(":"));
+			std::string user = ignore.substr(0, ignore.find(":") - 1);
 
 			std::cout << "DEMANDE DE FILE TRANSFER: " << user << " " << command << "\n";
-			// for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
-			// if ((*it)->getNick() == user){
-			// 	(*it)->sendBuffer();
-			// }
+			for (std::vector<Client*>::iterator it = _server->getClient().begin(); it != _server->getClient().end(); it++){
+				//std::cout << "NICKS: " << (*it)->getNick() << "FIN"  << (*it)->getNick().size() << std::endl;
+				//std::cout << "USER: " << user << "FIN"  << user.size() << std::endl;
+					if ((*it)->getNick() == user){
+						std::string reply = ":" + getPrefix() + " PRIVMSG " + (*it)->getNick() + " :\x01 DCC SEND " + file + " " + ip + " " + port + "\x01";
+						std::cout << reply;
+						//reply[reply.size() - 2] = '\0';
+						(*it)->sendBuffer(reply);
+						std::string reply2 = ":" + (*it)->getPrefix() + " NOTICE " + getNick() + " :\x01 DCC SEND " + file + " " + ip + " " + port + "\x01";
+						std::cout << reply2;
+						//reply2[reply2.size() - 2] = '\0';
+						sendBuffer(reply2);
+					}
+			}
 			fileTransfer()
 			return;
 		}
