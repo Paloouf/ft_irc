@@ -1,7 +1,7 @@
 #include "../include/main.hpp"
 
 Channel::Channel(Server *server, std::string name, Client* client) :_server(server), _name(name), _creator(client){
-    std::cout << "New Channel " << _name << " created by client[" << _creator->getFd() << "]\n";
+    std::cout << "New Channel " << _name << " created by client[" << _creator->getNick() << "]\n";
     setTopic("");
     _admins.push_back(client);
     _l = false;
@@ -12,42 +12,35 @@ Channel::Channel(Server *server, std::string name, Client* client) :_server(serv
     _limit = 0;
     this->join(client);
 }
+
 Channel::~Channel(){
 	std::cout << "Channel '" << getName() << "' destroyed\n";
 }
 
-
 void Channel::join(Client* client){
-    if (!_l || _limit >= _clients.size() + 1){
-        if (!_i || (_i && _invited.find(client->getNick()) != _invited.end())){
-            std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-            std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
-            client->sendBuffer(join);
+    if (!_l || _limit >= _clients.size() + 1)
+    {
+        if (!_i || (_i && _invited.find(client->getNick()) != _invited.end()))
+        {
+            client->sendBuffer(RPL_JOIN(client->getPrefix(), _name));
             if (!_topic.compare(""))
-            {
-                std::string topic = RPL_NOTOPIC(client->getNick(), this->getName());
-                client->sendBuffer(topic);
-            }
-            else{
-                std::string topic = RPL_TOPIC(client->getNick(), this->getName(), this->getTopic());
-                client->sendBuffer(topic);
-            }
+                client->sendBuffer(RPL_NOTOPIC(client->getNick(), this->getName()));
+            else
+                client->sendBuffer(RPL_TOPIC(client->getNick(), this->getName(), this->getTopic()));
             _clients.push_back(client);
             client->getChan().push_back(this);
             std::string names;
-            for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-            for(std::vector<Client*>::iterator itt = _admins.begin(); itt != _admins.end(); itt++){
-                if ((*itt)->getFd() == (*it)->getFd()){
-                    names += "@";
-                    //it++;
+            for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+            {
+                for(std::vector<Client*>::iterator itt = _admins.begin(); itt != _admins.end(); itt++)
+                {
+                    if ((*itt)->getFd() == (*it)->getFd())
+                        names += "@";
                 }
-            }
                 names += (*it)->getNick() + " ";
             }
-            std::string userlist = RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str());
-            client->sendBuffer(userlist);
-            std::string endofnames = RPL_ENDOFNAMES(client->getNick(), this->getName());
-            client->sendBuffer(endofnames);
+            client->sendBuffer(RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str()));
+            client->sendBuffer(RPL_ENDOFNAMES(client->getNick(), this->getName()));
             update(client);
         }
         else
@@ -58,21 +51,17 @@ void Channel::join(Client* client){
 }
 
 void	Channel::update(Client *client){
-	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-	std::string join = ":" + prefix + " JOIN " + _name + "\r\n";
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end() - 1; it++){
-		(*it)->sendBuffer(join);
-		std::cout << (*it)->getFd() << ": updated with " << join;
+		(*it)->sendBuffer(RPL_JOIN(client->getPrefix(), _name));
+		std::cout << (*it)->getFd() << ": updated with " << RPL_JOIN(client->getPrefix(), _name);
 	}
 }
 
 void	Channel::sendMsg(Client *client, std::string target, std::string msg){
-    std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-    std::string fullmsg = ":" + prefix + " PRIVMSG " + target + " :" + msg;
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
 		if (client->getFd() != (*it)->getFd()){
-			(*it)->sendBuffer(fullmsg);
-			std::cout << (*it)->getFd() << ": updated with " << fullmsg;
+			(*it)->sendBuffer(SEND_PRIVMSG(client->getPrefix(), target, msg));
+			std::cout << (*it)->getFd() << ": updated with " << SEND_PRIVMSG(client->getPrefix(), target, msg);
 		}
 	}
 }
@@ -86,26 +75,26 @@ void	Channel::broadcast(std::string message)
 
 
 void	Channel::sendMode(Client *client, std::string target, std::string mode, std::string msg){
-	std::string prefix = client->getNick() + (client->getUser().empty() ? "" : "!" + client->getUser()) + (client->getHostname().empty() ? "" : "@" + client->getHostname());
-    std::string fullmsg = ":" + prefix + " MODE " + target + " " + mode + " " + msg;
 	for(std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++){
-			(*it)->sendBuffer(fullmsg);
-			std::cout << (*it)->getFd() << ": updated with " << fullmsg;	
+			(*it)->sendBuffer(SEND_MODE(client->getPrefix(), target, mode, msg));
+			std::cout << (*it)->getFd() << ": updated with " << SEND_MODE(client->getPrefix(), target, mode, msg);	
 	}
 }
 
-void    Channel::parseMode(Client *client, std::string target, std::string buff){
+void    Channel::parseMode(Client *client, std::string buff){
     std::stringstream smodes(buff);
 	std::string modes, param;
 	std::vector<std::string> params;
 	smodes >> modes;
 	std::getline(smodes, param, ' ');
-	while (std::getline(smodes, param, ' ')){
+	while (std::getline(smodes, param, ' '))
 		params.push_back(param);
-	}
-    if (isAdmin(client)){
-        while (modes.find("-") != std::string::npos || modes.find("+") != std::string::npos){
-            if (modes.find("-") < modes.find("+")){
+    if (isAdmin(client))
+    {
+        while (modes.find("-") != std::string::npos || modes.find("+") != std::string::npos)
+        {
+            if (modes.find("-") < modes.find("+"))
+            {
                 //remove modes
                 size_t i = modes.find("-");
                 std::string del;
@@ -117,10 +106,10 @@ void    Channel::parseMode(Client *client, std::string target, std::string buff)
                 removeMode(client, del, params);
                 modes = modes.substr(i);
             }
-            else{
+            else
+            {
                 //add modes
                 size_t i = modes.find("+");
-                std::cout << "i: " << i << ", size: " << modes.size() << std::endl;
                 std::string add;
                 i++;
                 while (i != modes.find("-") && i < modes.size()){
@@ -128,7 +117,6 @@ void    Channel::parseMode(Client *client, std::string target, std::string buff)
                     i++;
                 }
                 addMode(client, add, params);
-                std::cout << target << " miaou " << client->getFd() << std::endl;
                 modes = modes.substr(i);
             }
         }
@@ -234,7 +222,6 @@ bool    Channel::isAdmin(Client* client){
 }
 
 void    Channel::addMode(Client *client,std::string add, std::vector<std::string> params){
-	//PROBLEME SI PAS D'ARGUMENTS DERRIERE
     int size = params.size();
     if (size > 0){
         params.back().resize(params.back().size() - 1);
