@@ -81,6 +81,7 @@ void	Channel::sendMode(Client *client, std::string target, std::string mode, std
 	}
 }
 
+
 void    Channel::parseMode(Client *client, std::string buff){
     std::stringstream smodes(buff);
 	std::string modes, param;

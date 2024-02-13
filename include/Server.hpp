@@ -46,4 +46,5 @@ class Server{
 		std::string 					getPort()		{return _port;}
 		std::vector<Client*>			&getClient()	{return _clients;}
 		std::map<std::string, Channel*>	&getChan()		{return _chanMap;}
+
 };

@@ -32,13 +32,13 @@ void	Client::errorReset(const char* error)
 void	Client::parseBuffer(char * buffer)
 {
 	std::string command = buffer;
-	if (command.find("\nQUIT ") != std::string::npos)
-	{
-		getServer()->deleteClient(this);
-		return ;
-	}
+	if (command.find("\nQUIT ") != std::string::npos){
+			getServer()->deleteClient(this);
+			return ;
+		}
 	if (_negoCount < 4)
 	{
+		
 		try
 			{parseNego(buffer);}
 		catch (Error::wrongPassword& error)
@@ -313,16 +313,14 @@ void	Client::privMsg(std::string command)
 {
 	char* commandbis = &command[8];
 	std::string target = strtok(commandbis, " ");
-	if (target[0] == '#')
-	{
+	if (target[0] == '#'){
 		for (std::vector<Channel*>::iterator it = _chan.begin(); it != _chan.end(); it++){
 			if ((*it)->getName() == target){
 				(*it)->sendMsg(this, target, command.substr(command.find(":") + 1));
 			}
 		}
 	}
-	else
-	{
+	else{
 		std::string cmd, msg, cible;
 		if (command.find("DCC") != std::string::npos)
 		{

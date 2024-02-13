@@ -1,6 +1,7 @@
 #include "../include/Server.hpp"
 
 //SERVER LAUNCHING//
+
 int global = 1; //Global variable to catch Ctrl-c signal and cut the server cleanly
 
 Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL) 
@@ -14,6 +15,7 @@ Server::Server(std::string port, std::string password): _port(port), _password(p
 		{std::cerr << error.what() << std::endl;}
 	listening();
 }
+
 
 void signalHandler(int signum)
 {
@@ -39,6 +41,7 @@ void		Server::checkInput()
 		throw Error::portTooHigh();
 }
 
+
 Server::~Server()
 {
 	for (unsigned i = 0; i < _clients.size();i++){
@@ -51,6 +54,9 @@ Server::~Server()
 	delete [] _clientsFd;
 	std::cout << "Server disconnected\n";
 }
+
+
+
 
 //SERVER LISTENING//
 
