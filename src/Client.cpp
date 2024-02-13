@@ -361,14 +361,14 @@ void	Client::privMsg(std::string command)
 				//std::cout << "NICKS: " << (*it)->getNick() << "FIN"  << (*it)->getNick().size() << std::endl;
 				//std::cout << "USER: " << user << "FIN"  << user.size() << std::endl;
 					if ((*it)->getNick() == user){
-						std::string reply = ":" + (*it)->getPrefix() + " PRIVMSG " + getNick() + " :\x01 DCC SEND " + file + " " + ip + " " + port + "\x01";
+						std::string reply = ":" + getPrefix() + " PRIVMSG " + (*it)->getNick() + " :\x01 DCC SEND " + file + " " + ip + " " + port + " " + size + "\x01";
 						std::cout << reply;
-						reply[reply.size() - 2] = '\0';
+//						reply[reply.size() - 2] = '\0';
 						(*it)->sendBuffer(reply);
-						std::string reply2 = ":" + (*it)->getPrefix() + " NOTICE " + (*it)->getNick() + " :\x01 DCC SEND " + file + " " + ip + " " + port + "\x01";
-						std::cout << reply2;
-						reply2[reply2.size() - 2] = '\0';
-						sendBuffer(reply2);
+					//	std::string reply2 = ":" + (*it)->getPrefix() + " NOTICE " + (*it)->getNick() + " :\x01 DCC SEND " + file + " " + ip + " " + port + "\x01";
+					//	std::cout << reply2;
+					//	reply2[reply2.size() - 2] = '\0';
+					//	sendBuffer(reply2);
 					}
 			}
 			//fileTransfer();
