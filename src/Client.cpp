@@ -361,7 +361,7 @@ void	Client::privMsg(std::string command)
 				std::cout << "NICKS: " << (*it)->getNick() << "FIN"  << (*it)->getNick().size() << std::endl;
 				std::cout << "USER: " << user << "FIN"  << user.size() << std::endl;
 					if ((*it)->getNick() == user){
-						std::string reply = " DCC ACCEPT " + file + " " + ip + " " + port + " " + size + "\n";
+						std::string reply = ":" + getPrefix() + " PRIVMSG " + (*it)->getNick() + ":\x01 DCC SEND " + file + " " + ip + " " + port + "\r\n";
 						std::cout << reply;
 						reply[reply.size() - 2] = '\n';
 						(*it)->sendBuffer(reply);
