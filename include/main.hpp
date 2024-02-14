@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <arpa/inet.h>
 #include <cstdlib>
+#include <cstddef>
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
@@ -15,6 +16,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <stdint.h>
+#include <signal.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -26,3 +28,5 @@
 #include "Client.hpp"
 #include "rpl.hpp"
 #include "Server.hpp"
+
+void					signalHandler(int);
