@@ -10,6 +10,8 @@ Channel::Channel(Server *server, std::string name, Client* client) :_server(serv
     _t = false;
     _o = false;
     _limit = 0;
+    std::string botname = "EasyBot!EasyBot@EasyRC.gg";
+    client->sendBuffer(RPL_JOIN(botname, _name));
     this->join(client);
 }
 
@@ -39,6 +41,7 @@ void Channel::join(Client* client){
                 }
                 names += (*it)->getNick() + " ";
             }
+            names += "@EasyBot";
             client->sendBuffer(RPL_NAMREPLY(client->getNick(), this->getName(), names.c_str()));
             client->sendBuffer(RPL_ENDOFNAMES(client->getNick(), this->getName()));
             update(client);

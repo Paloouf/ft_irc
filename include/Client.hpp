@@ -30,6 +30,7 @@ class Client{
 		bool	checkNick(std::string nick);
 		bool	checkDoubleNick(std::string nick);
 		bool	checkDoubleUser(const char* user);
+		void	help();
 
 
 		//GETTERS

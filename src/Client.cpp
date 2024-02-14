@@ -133,7 +133,7 @@ void	Client::parseMsg(char *buffer)
 	if (command.size() > 3 && command.substr(0,4) == "WHO ")
 		getServer()->whoReply(this, buffer);
 	if (command.size() > 4 && command.substr(0,5) == "NICK ")
-		changeNick(command.substr(5));
+		changeNick(command.substr(5, command.size() - 6));
 	if (command.substr(0,8) == "PRIVMSG ")
 		privMsg(command);
 	if(command.substr(0,5) == "MODE ")
@@ -148,6 +148,20 @@ void	Client::parseMsg(char *buffer)
 		kick(command);
 	if (command.substr(0,7) == "INVITE ")
 		invite(command);
+	if (command.substr(0,5) == "HELP\n" || command.substr(0,5) == "help\n")
+		help();
+}
+
+void	Client::help()
+{
+	std::string msg = ":EasyBot PRIVMSG " + getNick() + " :Hello, I'm EasyBot and I'm here to help\n";
+	sendBuffer(msg);
+	msg = ":EasyBot PRIVMSG " + getNick() + " :Functions you can use now: /JOIN, /NICK, /PRIVMSG\n";
+	sendBuffer(msg);
+	msg = ":EasyBot PRIVMSG " + getNick() + " :Functions you can use when operator: /KICK, /MODE (i,t,k,o,l)\n";
+	sendBuffer(msg);
+	msg = ":EasyBot PRIVMSG " + getNick() + " :Functions you can use when member of a channel: /INVITE, /TOPIC\n";
+	sendBuffer(msg);
 }
 
 void	Client::invite(std::string command)
