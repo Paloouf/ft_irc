@@ -1,7 +1,8 @@
 #include "../include/Server.hpp"
 
 //SERVER LAUNCHING//
-int global = 1;
+
+int global = 1; //Global variable to catch Ctrl-c signal and cut the server cleanly
 
 Server::Server(std::string port, std::string password): _port(port), _password(password),  _clients(0), _clientsFd(NULL) 
 {
@@ -15,8 +16,10 @@ Server::Server(std::string port, std::string password): _port(port), _password(p
 	listening();
 }
 
-void signalHandler(int signum){
-	std::cout << "Caught ctrl+C signal\n";
+
+void signalHandler(int signum)
+{
+	std::cout << "\nCaught ctrl+C signal\n";
 	if (signum == SIGINT)
 		global = 0;
 }
@@ -26,9 +29,6 @@ void Server::setTime()
     std::time_t result;
 	time(&result);
     struct tm* timeinfo = localtime(&result);
-
-	
-    //timeinfo = localtime(&result);
     _date = asctime(timeinfo);
 }
 
@@ -42,7 +42,8 @@ void		Server::checkInput()
 }
 
 
-Server::~Server(){
+Server::~Server()
+{
 	for (unsigned i = 0; i < _clients.size();i++){
 		delete _clients[i];
 	}
@@ -51,7 +52,9 @@ Server::~Server(){
 	}
 	_chanMap.clear();
 	delete [] _clientsFd;
-	std::cout << "Server dead\n";}
+	std::cout << "Server disconnected\n";
+}
+
 
 
 
@@ -63,23 +66,37 @@ void	Server::listening()
 	struct sockaddr_in address;
 	struct in_addr addr;
 	addr.s_addr = INADDR_ANY;
+	int opt = 1;
 
 	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	int opt = 1;
-	setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
+	if (_sockfd == -1)
+	{
+		std::cerr << "Failed to create a socket\n";
+		exit(EXIT_FAILURE);
+	}
+	if (setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
+	{
+		std::cerr << "setsockopt failed\n";
+		exit(EXIT_FAILURE);
+	}
 	fcntl(_sockfd, F_SETFL, O_NONBLOCK);
 	address.sin_family = AF_INET;
 	address.sin_addr = addr;
 	address.sin_port = htons(std::atoi(_port.c_str()));
-
-	bind(_sockfd, (struct sockaddr*)&address, sizeof(address));
-	listen(_sockfd, 8);
+	if (bind(_sockfd, (struct sockaddr*)&address, sizeof(address)) < 0)
+	{
+		std::cerr << "Failed to bind to port " << _port << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (listen(_sockfd, 8) < 0)
+	{
+		std::cerr << "Failed to listen on socket\n";
+		exit(EXIT_FAILURE);
+	}
 	std::cout << "Waiting for connection...\n\n";
 	createFd();
-	
-	while (global){
+	while (global)
 		waitInput();
-	}
 }
 
 //DATA REPLYING//
@@ -110,9 +127,8 @@ void	Server::replyChannel(Client* client, char* buffer)
 			}
 		}
 	}
-	message = RPL_ENDOFWHO(client->getHostname(), buffer);
-	std::cout << "Responding to client " << client->getFd() << " with message " << message;
-	client->sendBuffer(message);
+	std::cout << "Responding to client " << client->getFd() << " with message " << RPL_ENDOFWHO(client->getHostname(), buffer);
+	client->sendBuffer(RPL_ENDOFWHO(client->getHostname(), buffer));
 }
 
 void	Server::replyUser(Client* client, char* buffer)
@@ -129,9 +145,8 @@ void	Server::replyUser(Client* client, char* buffer)
 			client->sendBuffer(message);
 		}
 	}
-	message = RPL_ENDOFWHO(client->getHostname(), buffer);
-	std::cout << "Responding to client " << client->getFd() << " with message " << message;
-	client->sendBuffer(message);
+	std::cout << "Responding to client " << client->getFd() << " with message " << RPL_ENDOFWHO(client->getHostname(), buffer);
+	client->sendBuffer(RPL_ENDOFWHO(client->getHostname(), buffer));
 }
 
 void	Server::waitInput(){
@@ -151,8 +166,7 @@ void	Server::waitInput(){
 		}
 		else if (i != 0 && !_clients[i - 1]->getSend().empty())
 		{
-
-			std::cout << "MSG[" << _clients[i - 1]->getFd() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG\n";
+			std::cout << "MSG_SENT[" << _clients[i - 1]->getNick() << "]:" << _clients[i - 1]->getSend() << "\nEND OF MSG_SENT\n";
 			send(_clients[i - 1]->getFd(), _clients[i - 1]->getSend().c_str(), _clients[i - 1]->getSend().size(), 0);
 			_clients[i - 1]->resetSend();
 		}
@@ -255,21 +269,16 @@ void	Server::checkChannel(Client *client, std::string buffer){
 		if (_chanMap[channel]->getChanK())
 		{
 			std::cout << "channel:" << _chanMap[channel]->getName() << " " << "pass:" << _chanMap[channel]->getPass() << '\n';
-			if (_chanMap[channel]->getPass() == pass){
+			if (_chanMap[channel]->getPass() == pass)
 				_chanMap[channel]->join(client);
-				//_chanMap[channel]->update(client);
-			}else{
+			else
 				client->sendBuffer(ERR_BADCHANNELKEY(client->getPrefix(), channel));
-			}
 		}
-		else{
+		else
 			_chanMap[channel]->join(client);
-			//_chanMap[channel]->update(client);
-		}
 	}
-	else{
+	else
 		_chanMap.insert(make_pair(channel, new Channel(this, channel, client)));
-	}
 }
 
 void	Server::broadcast(std::string message)
